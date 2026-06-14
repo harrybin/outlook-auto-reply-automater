@@ -1,0 +1,110 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": {
+    "short": "Auto-Reply Automater",
+    "full": "Outlook Auto-Reply Automater"
+  },
+  "description": {
+    "short": "Automate Outlook auto-reply based on calendar appointments, location, and Teams status.",
+    "full": "Automatically manage your Outlook out-of-office auto-reply messages based on calendar appointment keywords, duration, busy status, geographic location, WiFi network, and Microsoft Teams presence. Powered by Microsoft Copilot for smart reply suggestions."
+  },
+  "icons": {
+    "outline": "assets/icon-outline.png",
+    "color": "assets/icon-color.png"
+  },
+  "accentColor": "#0078D4",
+  "developer": {
+    "name": "Your Company Name",
+    "websiteUrl": "https://github.com/harrybin/outlook-auto-reply-automater",
+    "privacyUrl": "https://github.com/harrybin/outlook-auto-reply-automater/blob/main/PRIVACY.md",
+    "termsOfUseUrl": "https://github.com/harrybin/outlook-auto-reply-automater/blob/main/TERMS.md"
+  },
+  "localizationInfo": {
+    "defaultLanguageTag": "en-US"
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "MailboxItem.ReadWrite.User",
+          "type": "Delegated"
+        },
+        {
+          "name": "Calendars.ReadWrite",
+          "type": "Delegated"
+        }
+      ]
+    }
+  },
+  "extensions": [
+    {
+      "requirements": {
+        "scopes": ["mail"]
+      },
+      "runtimes": [
+        {
+          "requirements": {
+            "capabilities": [
+              { "name": "Mailbox", "minVersion": "1.5" }
+            ]
+          },
+          "id": "TaskPaneRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://localhost:3000/src/taskpane/index.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "OpenTaskPane",
+              "type": "openPage",
+              "pinnable": true,
+              "view": "dashboard"
+            }
+          ]
+        }
+      ],
+      "ribbons": [
+        {
+          "contexts": ["mailRead", "default"],
+          "tabs": [
+            {
+              "builtInTabId": "TabDefault",
+              "groups": [
+                {
+                  "id": "AutoReplyGroup",
+                  "label": "Auto-Reply Automater",
+                  "icons": [
+                    { "size": 16, "file": "assets/icon-16.png" },
+                    { "size": 32, "file": "assets/icon-32.png" },
+                    { "size": 80, "file": "assets/icon-80.png" }
+                  ],
+                  "controls": [
+                    {
+                      "id": "OpenAutoReplyPane",
+                      "type": "button",
+                      "label": "Manage Auto-Reply",
+                      "icons": [
+                        { "size": 16, "file": "assets/icon-16.png" },
+                        { "size": 32, "file": "assets/icon-32.png" },
+                        { "size": 80, "file": "assets/icon-80.png" }
+                      ],
+                      "supertip": {
+                        "title": "Auto-Reply Automater",
+                        "description": "Open the Auto-Reply Automater task pane to manage automatic out-of-office messages."
+                      },
+                      "actionId": "OpenTaskPane"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
