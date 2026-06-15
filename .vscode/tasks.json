@@ -1,0 +1,271 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ──────────────────────────────────────────────────────────────────────────
+    // Build
+    // Bumps the patch version automatically (via prebuild hook), compiles
+    // TypeScript, and bundles with Vite.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Build & Install Locally
+    // Bumps version, builds the project, then sideloads the add-in into the
+    // locally installed Outlook desktop client for immediate testing.
+    // Requires the office-addin-debugging package (included as a dev dep).
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Build & Install Locally",
+      "type": "shell",
+      "command": "npm run build:local",
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Start / Debug
+    // Starts the Vite dev server (with HTTPS) and sideloads the manifest into
+    // Outlook.  The debug port is forwarded automatically by VS Code.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Start / Debug",
+      "type": "shell",
+      "command": "npm run start",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Local:.*https?://"
+        }
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Stop
+    // Stops the debugging session and removes the sideloaded add-in.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Stop",
+      "type": "shell",
+      "command": "npm run stop",
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test
+    // Runs the full Vitest test suite once and reports results.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Test",
+      "type": "shell",
+      "command": "npm test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Test (watch)
+    // Runs Vitest in watch mode for continuous feedback during development.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Test (watch)",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Validate Manifest
+    // Validates manifest.json against the Office Add-in schema.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Validate Manifest",
+      "type": "shell",
+      "command": "npm run validate",
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Pack (create installable package)
+    // Bundles the built add-in into a .zip package ready for manual
+    // distribution or AppSource submission.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Pack",
+      "type": "shell",
+      "command": "npm run pack",
+      "group": "none",
+      "dependsOn": "Build",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Publish to AppSource
+    // Publishes the packaged add-in to Microsoft AppSource (Partner Center).
+    // Ensure OFFICE_ADDIN_PUBLISH_* environment variables are set first.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Publish",
+      "type": "shell",
+      "command": "npm run publish",
+      "group": "none",
+      "dependsOn": "Pack",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Bump Version (patch)
+    // Manually increments the build/patch version without triggering a build.
+    // Run this if you need to bump the version outside of a build cycle.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Bump Version (patch)",
+      "type": "shell",
+      "command": "npm run version:bump",
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Bump Version (minor)
+    // Increments the minor version (e.g. 1.2.x → 1.3.0).
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Bump Version (minor)",
+      "type": "shell",
+      "command": "npm run version:bump:minor",
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Bump Version (major)
+    // Increments the major version (e.g. 1.x.y → 2.0.0).
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Bump Version (major)",
+      "type": "shell",
+      "command": "npm run version:bump:major",
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    }
+  ]
+}
