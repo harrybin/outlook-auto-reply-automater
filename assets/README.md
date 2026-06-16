@@ -18,13 +18,9 @@ This directory contains icon files for the Outlook add-in.
 
 ### `icon-color.png`
 - **Purpose**: Full-color icon for Teams app catalog and distribution
-- **Size**: 32×32 pixels
+- **Size**: 192×192 pixels
 - **Usage**: Referenced in `manifest.json` as color icon
 - **Design**: Full-color icon, preferably blue theme to match Office branding
-
-## Current Status
-
-⚠️ **Placeholder Files**: The current icons are placeholder PNG files. For production use, replace them with actual icon designs.
 
 ## How to Regenerate Icons
 

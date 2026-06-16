@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
  * Generate PNG icons for the Outlook Auto-Reply Automater add-in.
- * Creates 16x16, 32x32, 80x80 ribbon icons plus 32x32 Teams icons.
+ * Creates 16x16, 32x32, 80x80 ribbon icons plus Teams catalog icons.
  */
 
 const fs = require("fs");
 const path = require("path");
 const { PNG } = require("pngjs");
+
+const OVERSAMPLE = 8;
 
 const assetsDir = path.join(__dirname, "..", "assets");
 if (!fs.existsSync(assetsDir)) {
@@ -93,12 +95,13 @@ function drawClock(png, color) {
 }
 
 function createRibbonIcon(size) {
-  const png = new PNG({ width: size, height: size });
-  fillRect(png, 0, 0, size, size, COLORS.blue);
+  const hiResSize = size * OVERSAMPLE;
+  const png = new PNG({ width: hiResSize, height: hiResSize });
+  fillRect(png, 0, 0, hiResSize, hiResSize, COLORS.blue);
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (x > y + Math.floor(size * 0.45)) {
+  for (let y = 0; y < hiResSize; y++) {
+    for (let x = 0; x < hiResSize; x++) {
+      if (x > y + Math.floor(hiResSize * 0.45)) {
         putPixel(png, x, y, COLORS.blueDark);
       }
     }
@@ -106,19 +109,60 @@ function createRibbonIcon(size) {
 
   drawEnvelope(png, COLORS.white);
   drawClock(png, COLORS.white);
-  return png;
+  return downsamplePng(png, size);
 }
 
 function createOutlineIcon(size) {
-  const png = new PNG({ width: size, height: size });
-  fillRect(png, 0, 0, size, size, COLORS.transparent);
+  const hiResSize = size * OVERSAMPLE;
+  const png = new PNG({ width: hiResSize, height: hiResSize });
+  fillRect(png, 0, 0, hiResSize, hiResSize, COLORS.transparent);
   drawEnvelope(png, COLORS.white);
   drawClock(png, COLORS.white);
-  return png;
+  return downsamplePng(png, size);
 }
 
 function createColorIcon(size) {
   return createRibbonIcon(size);
+}
+
+function downsamplePng(source, targetSize) {
+  const result = new PNG({ width: targetSize, height: targetSize });
+  const scaleX = source.width / targetSize;
+  const scaleY = source.height / targetSize;
+
+  for (let y = 0; y < targetSize; y++) {
+    for (let x = 0; x < targetSize; x++) {
+      const startX = Math.floor(x * scaleX);
+      const endX = Math.floor((x + 1) * scaleX);
+      const startY = Math.floor(y * scaleY);
+      const endY = Math.floor((y + 1) * scaleY);
+
+      let sumR = 0;
+      let sumG = 0;
+      let sumB = 0;
+      let sumA = 0;
+      let count = 0;
+
+      for (let yy = startY; yy < endY; yy++) {
+        for (let xx = startX; xx < endX; xx++) {
+          const idx = (source.width * yy + xx) << 2;
+          sumR += source.data[idx];
+          sumG += source.data[idx + 1];
+          sumB += source.data[idx + 2];
+          sumA += source.data[idx + 3];
+          count++;
+        }
+      }
+
+      const outIdx = (result.width * y + x) << 2;
+      result.data[outIdx] = Math.round(sumR / count);
+      result.data[outIdx + 1] = Math.round(sumG / count);
+      result.data[outIdx + 2] = Math.round(sumB / count);
+      result.data[outIdx + 3] = Math.round(sumA / count);
+    }
+  }
+
+  return result;
 }
 
 function writePng(name, desc, png) {
@@ -131,6 +175,6 @@ writePng("icon-16.png", "16x16 ribbon icon", createRibbonIcon(16));
 writePng("icon-32.png", "32x32 ribbon icon", createRibbonIcon(32));
 writePng("icon-80.png", "80x80 ribbon icon", createRibbonIcon(80));
 writePng("icon-outline.png", "32x32 outline icon", createOutlineIcon(32));
-writePng("icon-color.png", "32x32 full-color icon", createColorIcon(32));
+writePng("icon-color.png", "192x192 full-color icon", createColorIcon(192));
 
 console.log(`\n5 icon files created in ${assetsDir}/`);
