@@ -1,6 +1,6 @@
 {
   "name": "outlook-auto-reply-automater",
-  "version": "1.0.3",
+  "version": "1.0.11",
   "description": "An Outlook add-in that automatically manages auto-reply messages based on calendar appointments, location, and Teams status.",
   "private": true,
   "scripts": {
@@ -34,6 +34,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

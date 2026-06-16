@@ -1,14 +1,14 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
   "manifestVersion": "1.17",
-  "version": "1.0.3",
+  "version": "1.0.11",
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "name": {
     "short": "Auto-Reply Automater",
     "full": "Outlook Auto-Reply Automater"
   },
   "description": {
-    "short": "Automate Outlook auto-reply based on calendar appointments, location, and Teams status.",
+    "short": "Automate Outlook auto-reply via calendar, location, and Teams.",
     "full": "Automatically manage your Outlook out-of-office auto-reply messages based on calendar appointment keywords, duration, busy status, geographic location, WiFi network, and Microsoft Teams presence. Powered by Microsoft Copilot for smart reply suggestions."
   },
   "icons": {
@@ -80,7 +80,12 @@
           ],
           "tabs": [
             {
-              "builtInTabId": "TabDefault",
+              "id": "AutoReplyTab",
+              "label": "Auto-Reply",
+              "position": {
+                "builtInTabId": "TabDefault",
+                "align": "after"
+              },
               "groups": [
                 {
                   "id": "AutoReplyGroup",
@@ -88,15 +93,15 @@
                   "icons": [
                     {
                       "size": 16,
-                      "file": "assets/icon-16.png"
+                      "url": "https://localhost:3000/assets/icon-16.png"
                     },
                     {
                       "size": 32,
-                      "file": "assets/icon-32.png"
+                      "url": "https://localhost:3000/assets/icon-32.png"
                     },
                     {
                       "size": 80,
-                      "file": "assets/icon-80.png"
+                      "url": "https://localhost:3000/assets/icon-80.png"
                     }
                   ],
                   "controls": [
@@ -107,15 +112,15 @@
                       "icons": [
                         {
                           "size": 16,
-                          "file": "assets/icon-16.png"
+                          "url": "https://localhost:3000/assets/icon-16.png"
                         },
                         {
                           "size": 32,
-                          "file": "assets/icon-32.png"
+                          "url": "https://localhost:3000/assets/icon-32.png"
                         },
                         {
                           "size": 80,
-                          "file": "assets/icon-80.png"
+                          "url": "https://localhost:3000/assets/icon-80.png"
                         }
                       ],
                       "supertip": {

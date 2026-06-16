@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Dialog,
@@ -14,7 +14,11 @@ import {
   Textarea,
   tokens,
 } from "@fluentui/react-components";
-import { Add24Regular, Delete24Regular, Edit24Regular } from "@fluentui/react-icons";
+import {
+  Add24Regular,
+  Delete24Regular,
+  Edit24Regular,
+} from "@fluentui/react-icons";
 import type { AutoReplyMessage } from "../types";
 import { useStore } from "../useStore";
 
@@ -27,7 +31,10 @@ export function AutoReplyList() {
   const [editing, setEditing] = useState<AutoReplyMessage | null>(null);
   const [isNew, setIsNew] = useState(false);
 
-  const emptyDraft = (): Omit<AutoReplyMessage, "id" | "createdAt" | "updatedAt"> => ({
+  const emptyDraft = (): Omit<
+    AutoReplyMessage,
+    "id" | "createdAt" | "updatedAt"
+  > => ({
     name: "",
     subject: "",
     body: "",
@@ -43,7 +50,12 @@ export function AutoReplyList() {
   };
 
   const openEdit = (msg: AutoReplyMessage) => {
-    setDraft({ name: msg.name, subject: msg.subject, body: msg.body, isHtml: msg.isHtml });
+    setDraft({
+      name: msg.name,
+      subject: msg.subject,
+      body: msg.body,
+      isHtml: msg.isHtml,
+    });
     setEditing(msg);
     setIsNew(false);
   };
@@ -61,12 +73,29 @@ export function AutoReplyList() {
   const isOpen = isNew || editing !== null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacingVerticalM }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: tokens.spacingVerticalM,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <span style={{ fontWeight: "600", fontSize: tokens.fontSizeBase400 }}>
           Auto-Reply Messages
         </span>
-        <Button icon={<Add24Regular />} appearance="primary" size="small" onClick={openNew}>
+        <Button
+          icon={<Add24Regular />}
+          appearance="primary"
+          size="small"
+          onClick={openNew}
+        >
           New
         </Button>
       </div>
@@ -89,24 +118,39 @@ export function AutoReplyList() {
       <Dialog
         open={isOpen}
         onOpenChange={(_e, data) => {
-          if (!data.open) { setEditing(null); setIsNew(false); }
+          if (!data.open) {
+            setEditing(null);
+            setIsNew(false);
+          }
         }}
       >
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>{isNew ? "New Auto-Reply Message" : "Edit Auto-Reply Message"}</DialogTitle>
-            <DialogContent style={{ display: "flex", flexDirection: "column", gap: tokens.spacingVerticalM }}>
+            <DialogTitle>
+              {isNew ? "New Auto-Reply Message" : "Edit Auto-Reply Message"}
+            </DialogTitle>
+            <DialogContent
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: tokens.spacingVerticalM,
+              }}
+            >
               <Field label="Name" required>
                 <Input
                   value={draft.name}
-                  onChange={(_e, d) => setDraft((p) => ({ ...p, name: d.value }))}
+                  onChange={(_e, d) =>
+                    setDraft((p) => ({ ...p, name: d.value }))
+                  }
                   placeholder="e.g. Vacation reply"
                 />
               </Field>
               <Field label="Email Subject" required>
                 <Input
                   value={draft.subject}
-                  onChange={(_e, d) => setDraft((p) => ({ ...p, subject: d.value }))}
+                  onChange={(_e, d) =>
+                    setDraft((p) => ({ ...p, subject: d.value }))
+                  }
                   placeholder="e.g. Out of office"
                 />
               </Field>
@@ -114,14 +158,18 @@ export function AutoReplyList() {
                 <Textarea
                   rows={6}
                   value={draft.body}
-                  onChange={(_e, d) => setDraft((p) => ({ ...p, body: d.value }))}
+                  onChange={(_e, d) =>
+                    setDraft((p) => ({ ...p, body: d.value }))
+                  }
                   placeholder="Enter your auto-reply message…"
                 />
               </Field>
               <Field label="HTML format">
                 <Switch
                   checked={draft.isHtml}
-                  onChange={(_e, d) => setDraft((p) => ({ ...p, isHtml: d.checked }))}
+                  onChange={(_e, d) =>
+                    setDraft((p) => ({ ...p, isHtml: d.checked }))
+                  }
                   label={draft.isHtml ? "HTML" : "Plain text"}
                 />
               </Field>
@@ -133,7 +181,11 @@ export function AutoReplyList() {
               <Button
                 appearance="primary"
                 onClick={handleSave}
-                disabled={!draft.name.trim() || !draft.subject.trim() || !draft.body.trim()}
+                disabled={
+                  !draft.name.trim() ||
+                  !draft.subject.trim() ||
+                  !draft.body.trim()
+                }
               >
                 Save
               </Button>
@@ -165,7 +217,9 @@ function MessageCard({ message, onEdit, onDelete }: MessageCardProps) {
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: "600", marginBottom: "2px" }}>{message.name}</div>
+        <div style={{ fontWeight: "600", marginBottom: "2px" }}>
+          {message.name}
+        </div>
         <div
           style={{
             color: tokens.colorNeutralForeground3,
@@ -178,9 +232,25 @@ function MessageCard({ message, onEdit, onDelete }: MessageCardProps) {
           {message.subject}
         </div>
       </div>
-      <div style={{ display: "flex", gap: tokens.spacingHorizontalXS, flexShrink: 0 }}>
-        <Button icon={<Edit24Regular />} appearance="subtle" size="small" onClick={onEdit} />
-        <Button icon={<Delete24Regular />} appearance="subtle" size="small" onClick={onDelete} />
+      <div
+        style={{
+          display: "flex",
+          gap: tokens.spacingHorizontalXS,
+          flexShrink: 0,
+        }}
+      >
+        <Button
+          icon={<Edit24Regular />}
+          appearance="subtle"
+          size="small"
+          onClick={onEdit}
+        />
+        <Button
+          icon={<Delete24Regular />}
+          appearance="subtle"
+          size="small"
+          onClick={onDelete}
+        />
       </div>
     </div>
   );

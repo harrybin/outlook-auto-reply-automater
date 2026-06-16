@@ -48,6 +48,44 @@ npm run start
 
 This validates the manifest and launches Outlook with the add-in sideloaded.
 
+## How to Use the Extension
+
+After sideloading, use this flow to configure and run automation:
+
+1. **Open the add-in in Outlook**
+    - In Outlook, open the add-in taskpane from the ribbon/app launcher.
+    - Sign in when prompted so the add-in can access Microsoft Graph data (calendar/presence) with the permissions in the manifest.
+
+2. **Create one or more auto-reply messages**
+    - Add a message template with a subject and body.
+    - Choose plain text or HTML format depending on your needs.
+
+3. **Create an automation profile**
+    - Link the profile to one of your message templates.
+    - Add matching rules for appointment fields such as title, location, organizer, or categories.
+    - Optionally constrain by busy status, all-day flag, and minimum duration.
+
+4. **Set timing and priority**
+    - Configure how many hours before an event to enable auto-reply.
+    - Configure how many hours after an event to disable auto-reply.
+    - Set profile priority (lower number = higher priority) to resolve conflicts when multiple profiles match.
+
+5. **Optionally add context signals**
+    - Add location-based conditions.
+    - Add Teams presence conditions.
+    - Use Copilot suggestions to draft or improve response text.
+
+6. **Save and verify behavior**
+    - Save your profiles and keep the add-in running.
+    - Create a test calendar event that matches your rules.
+    - Confirm Outlook automatic replies are enabled/disabled at the expected times.
+
+### Tips
+
+- Start with one simple profile and one test event before adding complex rule combinations.
+- If multiple profiles can match, double-check priority order first.
+- If automation does not trigger, verify sign-in/consent and calendar rule conditions.
+
 ## Available Scripts
 
 | Command | Description |

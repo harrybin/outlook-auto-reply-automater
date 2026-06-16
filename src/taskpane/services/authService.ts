@@ -5,7 +5,11 @@
  * Uses the MSAL Browser library for SPA / add-in flows.
  */
 
-import { PublicClientApplication, type AccountInfo, type AuthenticationResult } from "@azure/msal-browser";
+import {
+  PublicClientApplication,
+  type AccountInfo,
+  type AuthenticationResult,
+} from "@azure/msal-browser";
 import { Client } from "@microsoft/microsoft-graph-client";
 
 const SCOPES = [
@@ -16,8 +20,8 @@ const SCOPES = [
 ];
 
 // Replace with your Azure AD app registration client ID
-const CLIENT_ID = import.meta.env.VITE_AAD_CLIENT_ID as string ?? "";
-const TENANT_ID = import.meta.env.VITE_AAD_TENANT_ID as string ?? "common";
+const CLIENT_ID = import.meta.env.VITE_AAD_CLIENT_ID ?? "";
+const TENANT_ID = import.meta.env.VITE_AAD_TENANT_ID ?? "common";
 
 let msalInstance: PublicClientApplication | null = null;
 
@@ -31,7 +35,6 @@ export function getMsalInstance(): PublicClientApplication {
       },
       cache: {
         cacheLocation: "sessionStorage",
-        storeAuthStateInCookie: false,
       },
     });
   }

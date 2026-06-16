@@ -3,16 +3,17 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import fs from "fs";
 import os from "os";
+import type { ServerOptions } from "https";
 
 // Load dev certificates created by office-addin-dev-certs (if available)
-function getHttpsConfig() {
+function getHttpsConfig(): ServerOptions | undefined {
   const certPath = resolve(os.homedir(), ".office-addin-dev-certs");
   const keyFile = resolve(certPath, "localhost.key");
   const certFile = resolve(certPath, "localhost.crt");
   if (fs.existsSync(keyFile) && fs.existsSync(certFile)) {
     return { key: fs.readFileSync(keyFile), cert: fs.readFileSync(certFile) };
   }
-  return true; // Let Vite auto-generate
+  return undefined;
 }
 
 export default defineConfig(({ command }) => ({
