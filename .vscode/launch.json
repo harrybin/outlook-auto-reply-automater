@@ -1,0 +1,71 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // ──────────────────────────────────────────────────────────────────────────
+        // Debug Add-in (Edge / Chromium)
+        // Starts the Vite dev server, sideloads the manifest into Outlook, then
+        // attaches the VS Code debugger to the Edge instance hosting the taskpane.
+        // Breakpoints in src/ are resolved via the Vite sourcemaps.
+        // ──────────────────────────────────────────────────────────────────────────
+        {
+            "name": "Debug Add-in (Edge)",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9229,
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack:///src/*": "${webRoot}/*",
+                "/src/*": "${webRoot}/*"
+            },
+            "preLaunchTask": "Start / Debug",
+            "presentation": {
+                "hidden": false,
+                "group": "addin",
+                "order": 1
+            }
+        },
+        // ──────────────────────────────────────────────────────────────────────────
+        // Debug Add-in (Chrome)
+        // Same as above but uses the Chrome debugger — useful if Outlook is using
+        // a Chromium-based WebView2 build that is exposed on the Chrome protocol.
+        // ──────────────────────────────────────────────────────────────────────────
+        {
+            "name": "Debug Add-in (Chrome)",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9229,
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack:///src/*": "${webRoot}/*",
+                "/src/*": "${webRoot}/*"
+            },
+            "preLaunchTask": "Start / Debug",
+            "presentation": {
+                "hidden": false,
+                "group": "addin",
+                "order": 2
+            }
+        },
+        // ──────────────────────────────────────────────────────────────────────────
+        // Open Taskpane in Browser (dev only)
+        // Launches the Vite dev server and opens the taskpane directly in Edge for
+        // quick UI iteration without needing Outlook to be open.
+        // ──────────────────────────────────────────────────────────────────────────
+        {
+            "name": "Open Taskpane in Browser",
+            "type": "msedge",
+            "request": "launch",
+            "url": "https://localhost:3000/src/taskpane/index.html",
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "/src/*": "${webRoot}/*"
+            },
+            "preLaunchTask": "Start / Debug",
+            "presentation": {
+                "hidden": false,
+                "group": "addin",
+                "order": 3
+            }
+        }
+    ]
+}
