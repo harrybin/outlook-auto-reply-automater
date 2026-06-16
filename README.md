@@ -52,6 +52,25 @@ This validates the manifest and launches Outlook with the add-in sideloaded.
 
 After sideloading, use this flow to configure and run automation:
 
+### Where to Find It in Outlook
+
+- **New Outlook (Windows/Mac) and Outlook on the web**
+    - Open any email item.
+    - Go to **Apps** (or **More actions** > **Apps**) and select **Auto-Reply Automater**.
+    - You can pin the add-in/task pane for quicker access.
+
+- **Classic Outlook (Windows desktop)**
+    - Open any email item.
+    - In the ribbon, open the **Auto-Reply** tab.
+    - In the **Auto-Reply Automater** group, click **Manage Auto-Reply**.
+
+### Where Configuration Lives
+
+- Configuration is done inside the add-in task pane UI.
+- **Auto-Reply Messages** section: create/edit message templates (name, subject, body, HTML/plain text).
+- **Automation Profiles** section: define rules, timing, priority, and enable/disable behavior.
+- Settings are persisted locally in browser storage under the key `outlookAutoReplyAutomater_settings`.
+
 1. **Open the add-in in Outlook**
     - In Outlook, open the add-in taskpane from the ribbon/app launcher.
     - Sign in when prompted so the add-in can access Microsoft Graph data (calendar/presence) with the permissions in the manifest.
