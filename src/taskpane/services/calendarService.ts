@@ -115,6 +115,16 @@ function matchesKeywordRule(appointment: AppointmentInfo, rule: KeywordRule): bo
       return haystack === needle;
     case "regex":
       try {
+        const regexLiteralMatch = rule.value.match(/^\/([\s\S]*)\/([dgimsu]*)$/);
+        if (regexLiteralMatch) {
+          const [, pattern, flags] = regexLiteralMatch;
+          const dedupedFlags = Array.from(new Set(flags.split("")));
+          const normalizedFlags = rule.caseSensitive
+            ? dedupedFlags.filter((flag) => flag !== "i").join("")
+            : Array.from(new Set([...dedupedFlags, "i"])).join("");
+          return new RegExp(pattern, normalizedFlags).test(raw);
+        }
+
         return new RegExp(rule.value, rule.caseSensitive ? undefined : "i").test(raw);
       } catch {
         return false;
