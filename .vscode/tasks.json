@@ -50,6 +50,30 @@
       }
     },
     // ──────────────────────────────────────────────────────────────────────────
+    // Build, Deploy & Install
+    // Bumps version, builds the project, creates the hosted production bundle
+    // for the public website, then sideloads the production manifest so
+    // Outlook loads the released add-in from the hosted site instead of
+    // localhost.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Build, Deploy & Install",
+      "type": "shell",
+      "command": "npm run build && npm run pack:prod && npx office-addin-debugging start dist/deployment/manifest.json --prod",
+      "group": "build",
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    // ──────────────────────────────────────────────────────────────────────────
     // Start / Debug
     // Starts the Vite dev server (with HTTPS) and sideloads the manifest into
     // Outlook.  The debug port is forwarded automatically by VS Code.

@@ -18,8 +18,8 @@ jobs:
     build:
         runs-on: ubuntu-latest
         env:
-      DEPLOY_BASE_URL: https://outlook-auto-reply-automater.harrybin.de
-      VITE_BASE_PATH: /
+            DEPLOY_BASE_URL: https://outlook-auto-reply-automater.harrybin.de
+            VITE_BASE_PATH: /
         steps:
             - name: Checkout
               uses: actions/checkout@v4

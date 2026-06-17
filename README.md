@@ -4,9 +4,9 @@ An Outlook add-in that automatically manages your out-of-office auto-reply messa
 
 ## ⬇️ Install the Add-in
 
-The latest production manifest is always available directly from the hosted GitHub Pages deployment:
+The latest production manifest is always available directly from the hosted deployment:
 
-**[📥 Download manifest.json](https://harrybin.github.io/outlook-auto-reply-automater/manifest.json)**
+**[📥 Download manifest.json](https://outlook-auto-reply-automater.harrybin.de/manifest.json)**
 
 ### How to install in Outlook
 
@@ -17,7 +17,7 @@ The latest production manifest is always available directly from the hosted GitH
 5. Select the downloaded `manifest.json`.
 6. The **Auto-Reply Automater** add-in will appear in your Outlook ribbon or Apps menu.
 
-> **Note:** This manifest points to `https://harrybin.github.io/outlook-auto-reply-automater` — no local server required.
+> **Note:** This hosted manifest is generated from the root `manifest.json` during deployment and points to `https://outlook-auto-reply-automater.harrybin.de` — no local server required.
 
 ---
 
@@ -149,7 +149,7 @@ After sideloading, use this flow to configure and run automation:
 For Outlook on Windows and Mac, deployment requires two pieces:
 
 - A hosted HTTPS web app for the add-in UI
-- A manifest that points to that hosted URL
+- A generated manifest that points to that hosted URL
 
 Create a deployment bundle with:
 
@@ -161,7 +161,7 @@ npm run pack -- https://your-host.example.com/outlook-auto-reply-automater
 This writes a ready-to-deploy bundle to `dist/deployment`:
 
 - `dist/deployment/web/` contains the static web assets you must host over HTTPS
-- `dist/deployment/manifest.json` contains production URLs for Outlook deployment on Windows and Mac
+- `dist/deployment/manifest.json` contains a production manifest generated from the root `manifest.json`
 - `dist/deployment/DEPLOY.md` contains the deployment steps
 
 After hosting `dist/deployment/web/`, sideload or deploy `dist/deployment/manifest.json` into Outlook.

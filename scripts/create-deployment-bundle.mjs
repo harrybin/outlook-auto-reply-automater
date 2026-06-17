@@ -11,6 +11,8 @@ const webDir = path.join(deploymentDir, "web");
 const manifestPath = path.join(repoRoot, "manifest.json");
 const iconsDir = path.join(repoRoot, "assets");
 const readmePath = path.join(repoRoot, "README.md");
+const hostedEntries = ["src/taskpane/index.html", "src/demo/index.html"];
+const hostedAssetRoots = ["assets/", "src/"];
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -26,11 +28,13 @@ async function main() {
   await fs.mkdir(webDir, { recursive: true });
 
   await copyBuildOutput();
+  await rewriteHostedHtmlFiles(baseUrl);
+  await validateHostedEntries(baseUrl);
   await copyIcons();
   await copyReadme();
 
   const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
-  const deployedManifest = rewriteLocalhostUrls(manifest, baseUrl);
+  const deployedManifest = rewriteManifestHostedUrls(manifest, baseUrl);
   const outputManifestPath = path.join(deploymentDir, "manifest.json");
 
   const manifestJson = `${JSON.stringify(deployedManifest, null, 2)}\n`;
@@ -113,12 +117,14 @@ function normalizeBaseUrl(input) {
 }
 
 async function ensureBuildOutput() {
-  const taskpaneHtmlPath = path.join(distDir, "src", "taskpane", "index.html");
+  for (const hostedEntry of hostedEntries) {
+    const entryPath = path.join(distDir, hostedEntry);
 
-  try {
-    await fs.access(taskpaneHtmlPath);
-  } catch {
-    throw new Error(`Production build output is missing at ${taskpaneHtmlPath}. Run npm run build first.`);
+    try {
+      await fs.access(entryPath);
+    } catch {
+      throw new Error(`Production build output is missing at ${entryPath}. Run npm run build first.`);
+    }
   }
 }
 
@@ -166,26 +172,172 @@ async function copyEntry(sourcePath, targetPath) {
   await fs.copyFile(sourcePath, targetPath);
 }
 
-function rewriteLocalhostUrls(value, baseUrl) {
+async function rewriteHostedHtmlFiles(baseUrl) {
+  const htmlPaths = await collectFilesByExtension(webDir, ".html");
+  const basePath = normalizeHostedPathname(new URL(baseUrl).pathname);
+
+  for (const htmlPath of htmlPaths) {
+    const html = await fs.readFile(htmlPath, "utf8");
+    const rewrittenHtml = rewriteHostedHtmlUrls(html, basePath);
+
+    if (rewrittenHtml !== html) {
+      await fs.writeFile(htmlPath, rewrittenHtml);
+    }
+  }
+}
+
+async function validateHostedEntries(baseUrl) {
+  for (const hostedEntry of hostedEntries) {
+    const entryPath = path.join(webDir, hostedEntry);
+
+    try {
+      await fs.access(entryPath);
+    } catch {
+      throw new Error(`Deployment bundle is missing ${hostedEntry}.`);
+    }
+  }
+
+  const htmlPaths = await collectFilesByExtension(webDir, ".html");
+  const basePath = normalizeHostedPathname(new URL(baseUrl).pathname);
+
+  for (const htmlPath of htmlPaths) {
+    const html = await fs.readFile(htmlPath, "utf8");
+    const hostedUrls = extractHostedAssetUrls(html, basePath);
+
+    for (const hostedUrl of hostedUrls) {
+      const relativePath = hostedUrl.slice(basePath.length).replace(/^\/+/, "");
+
+      if (!relativePath) {
+        continue;
+      }
+
+      const assetPath = path.join(webDir, ...relativePath.split("/"));
+
+      try {
+        await fs.access(assetPath);
+      } catch {
+        const relativeHtmlPath = path.relative(webDir, htmlPath).replaceAll(path.sep, "/");
+        throw new Error(`Hosted asset ${hostedUrl} referenced by ${relativeHtmlPath} is missing from the deployment bundle.`);
+      }
+    }
+  }
+}
+
+async function collectFilesByExtension(rootDir, extension) {
+  const matchingPaths = [];
+  const entries = await fs.readdir(rootDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const entryPath = path.join(rootDir, entry.name);
+
+    if (entry.isDirectory()) {
+      matchingPaths.push(...(await collectFilesByExtension(entryPath, extension)));
+      continue;
+    }
+
+    if (entry.name.endsWith(extension)) {
+      matchingPaths.push(entryPath);
+    }
+  }
+
+  return matchingPaths;
+}
+
+function rewriteHostedHtmlUrls(html, basePath) {
+  return html.replace(/(src|href)=(['"])(\/[^'"]+)\2/g, (match, attributeName, quote, absolutePath) => {
+    const rewrittenPath = normalizeHostedAssetReference(absolutePath, basePath);
+
+    if (!rewrittenPath) {
+      return match;
+    }
+
+    return `${attributeName}=${quote}${rewrittenPath}${quote}`;
+  });
+}
+
+function extractHostedAssetUrls(html, basePath) {
+  const urls = [];
+
+  html.replace(/(src|href)=(['"])(\/[^'"]+)\2/g, (match, _attributeName, _quote, absolutePath) => {
+    const rewrittenPath = normalizeHostedAssetReference(absolutePath, basePath);
+
+    if (rewrittenPath) {
+      urls.push(rewrittenPath);
+    }
+
+    return match;
+  });
+
+  return urls;
+}
+
+function normalizeHostedAssetReference(absolutePath, basePath) {
+  const normalizedAbsolutePath = absolutePath.replace(/^\/+/, "");
+  const hostedSubpath = findHostedSubpath(normalizedAbsolutePath);
+
+  if (!hostedSubpath) {
+    return null;
+  }
+
+  return joinHostedPath(basePath, hostedSubpath);
+}
+
+function findHostedSubpath(assetPath) {
+  for (const hostedAssetRoot of hostedAssetRoots) {
+    if (assetPath.startsWith(hostedAssetRoot)) {
+      return assetPath;
+    }
+
+    const marker = `/${hostedAssetRoot}`;
+    const markerIndex = assetPath.indexOf(marker);
+
+    if (markerIndex >= 0) {
+      return assetPath.slice(markerIndex + 1);
+    }
+  }
+
+  return null;
+}
+
+function normalizeHostedPathname(pathname) {
+  const normalizedPathname = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+  return normalizedPathname.startsWith("/") ? normalizedPathname : `/${normalizedPathname}`;
+}
+
+function joinHostedPath(basePath, relativePath) {
+  const trimmedRelativePath = relativePath.replace(/^\/+/, "");
+
+  if (basePath === "/") {
+    return `/${trimmedRelativePath}`;
+  }
+
+  return `${basePath}/${trimmedRelativePath}`;
+}
+
+function rewriteManifestHostedUrls(value, baseUrl) {
   if (typeof value === "string") {
-    return value.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, baseUrl);
+    return rewriteHostedUrl(value, baseUrl);
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => rewriteLocalhostUrls(item, baseUrl));
+    return value.map((item) => rewriteManifestHostedUrls(item, baseUrl));
   }
 
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, rewriteLocalhostUrls(nestedValue, baseUrl)]),
+      Object.entries(value).map(([key, nestedValue]) => [key, rewriteManifestHostedUrls(nestedValue, baseUrl)]),
     );
   }
 
   return value;
 }
 
+function rewriteHostedUrl(value, baseUrl) {
+  return value.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, baseUrl);
+}
+
 function createDeploymentGuide(baseUrl) {
-  return `# Deployment Bundle\n\nThis bundle is intended for Outlook on Windows and Mac.\n\n## Contents\n- manifest.json: Production manifest for sideloading or catalog deployment\n- web/: Static web assets that must be hosted over HTTPS\n\n## Host The Web Assets\n1. Upload the contents of web/ to an HTTPS host.\n2. Preserve the existing folder structure so the task pane stays available at ${baseUrl}/src/taskpane/index.html.\n3. Confirm these URLs are reachable before sideloading:\n   - ${baseUrl}/src/taskpane/index.html\n   - ${baseUrl}/assets/icon-16.png\n   - ${baseUrl}/assets/icon-32.png\n   - ${baseUrl}/assets/icon-80.png\n\n## Deploy In Outlook\n### Windows and Mac\n1. Open Outlook.\n2. Go to Get Add-ins or Apps.\n3. Choose My add-ins or My Apps.\n4. Use Add a custom add-in or Upload custom apps.\n5. Select manifest.json from this folder.\n\n## Centralized Deployment\nUse manifest.json after the web assets are hosted and validated. The same manifest can be used for admin deployment or AppSource submission workflows.\n`;
+  return `# Deployment Bundle\n\nThis bundle is intended for Outlook on Windows and Mac.\n\n## Contents\n- manifest.json: Production manifest for sideloading or catalog deployment\n- web/: Static web assets that must be hosted over HTTPS\n\n## Host The Web Assets\n1. Upload the contents of web/ to an HTTPS host.\n2. Preserve the existing folder structure so the task pane stays available at ${baseUrl}/src/taskpane/index.html.\n3. Confirm these URLs are reachable before sideloading:\n   - ${baseUrl}/src/taskpane/index.html\n   - ${baseUrl}/src/demo/index.html\n   - ${baseUrl}/assets/icon-16.png\n   - ${baseUrl}/assets/icon-32.png\n   - ${baseUrl}/assets/icon-80.png\n\n## Deploy In Outlook\n### Windows and Mac\n1. Open Outlook.\n2. Go to Get Add-ins or Apps.\n3. Choose My add-ins or My Apps.\n4. Use Add a custom add-in or Upload custom apps.\n5. Select manifest.json from this folder.\n\n## Centralized Deployment\nUse manifest.json after the web assets are hosted and validated. The same manifest can be used for admin deployment or AppSource submission workflows.\n`;
 }
 
 main().catch((error) => {
