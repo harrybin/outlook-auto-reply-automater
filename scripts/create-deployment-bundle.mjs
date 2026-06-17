@@ -10,6 +10,7 @@ const deploymentDir = path.join(distDir, "deployment");
 const webDir = path.join(deploymentDir, "web");
 const manifestPath = path.join(repoRoot, "manifest.json");
 const iconsDir = path.join(repoRoot, "assets");
+const readmePath = path.join(repoRoot, "README.md");
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -26,12 +27,15 @@ async function main() {
 
   await copyBuildOutput();
   await copyIcons();
+  await copyReadme();
 
   const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
   const deployedManifest = rewriteLocalhostUrls(manifest, baseUrl);
   const outputManifestPath = path.join(deploymentDir, "manifest.json");
 
-  await fs.writeFile(outputManifestPath, `${JSON.stringify(deployedManifest, null, 2)}\n`);
+  const manifestJson = `${JSON.stringify(deployedManifest, null, 2)}\n`;
+  await fs.writeFile(outputManifestPath, manifestJson);
+  await fs.writeFile(path.join(webDir, "manifest.json"), manifestJson);
   await fs.writeFile(path.join(deploymentDir, "DEPLOY.md"), createDeploymentGuide(baseUrl));
 
   console.log(`Deployment bundle created at ${deploymentDir}`);
@@ -139,6 +143,10 @@ async function copyIcons() {
   for (const iconName of ["icon-16.png", "icon-32.png", "icon-80.png", "icon-color.png", "icon-outline.png"]) {
     await fs.copyFile(path.join(iconsDir, iconName), path.join(targetAssetsDir, iconName));
   }
+}
+
+async function copyReadme() {
+  await fs.copyFile(readmePath, path.join(webDir, "README.md"));
 }
 
 async function copyEntry(sourcePath, targetPath) {

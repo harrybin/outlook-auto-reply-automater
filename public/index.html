@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outlook Auto-Reply Automater</title>
+    <script src="marked.umd.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        background: #f6f8fa;
+        color: #24292f;
+      }
+
+      header {
+        background: #0078d4;
+        color: #fff;
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+      }
+
+      header img {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      main {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1.5rem 4rem;
+      }
+
+      #content {
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        padding: 2rem 2.5rem;
+      }
+
+      #loading {
+        text-align: center;
+        color: #57606a;
+        padding: 4rem 0;
+      }
+
+      #error {
+        display: none;
+        background: #ffebe9;
+        border: 1px solid #ff818266;
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        color: #82071e;
+      }
+
+      .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #fff;
+        color: #0078d4;
+        border: none;
+        border-radius: 4px;
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .download-btn:hover {
+        background: #e8f3fc;
+        text-decoration: none;
+      }
+
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        border-radius: 4px;
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .demo-btn:hover {
+        background: #ffca2c;
+        text-decoration: none;
+      }
+
+      .demo-callout {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .demo-callout p {
+        margin: 0;
+        flex: 1;
+        color: #664d03;
+        font-size: 0.95rem;
+      }
+      #content h1 { font-size: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
+      #content h2 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 1.5em; }
+      #content h3 { font-size: 1.25em; margin-top: 1.25em; }
+      #content a { color: #0969da; text-decoration: none; }
+      #content a:hover { text-decoration: underline; }
+      #content code {
+        background: #afb8c133;
+        border-radius: 3px;
+        font-size: 85%;
+        padding: 0.2em 0.4em;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+      }
+      #content pre {
+        background: #f6f8fa;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow-x: auto;
+        padding: 1rem;
+      }
+      #content pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 87.5%;
+      }
+      #content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+      }
+      #content th,
+      #content td {
+        border: 1px solid #d0d7de;
+        padding: 0.5em 0.75em;
+        text-align: left;
+      }
+      #content th { background: #f6f8fa; font-weight: 600; }
+      #content tr:nth-child(even) td { background: #f6f8fa; }
+      #content blockquote {
+        border-left: 4px solid #d0d7de;
+        color: #57606a;
+        margin: 0;
+        padding: 0 1em;
+      }
+      #content ul,
+      #content ol { padding-left: 2em; }
+      #content img { max-width: 100%; border-radius: 4px; }
+      #content hr { border: none; border-top: 1px solid #d0d7de; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-left">
+        <img src="assets/icon-80.png" alt="Add-in icon" onerror="this.style.display='none'" />
+        <h1>Outlook Auto-Reply Automater</h1>
+      </div>
+      <a class="download-btn" href="manifest.json" download="manifest.json">⬇️ Download manifest.json</a>
+      <a class="demo-btn" href="src/demo/index.html">▶ Try Interactive Demo</a>
+    </header>
+    <main>
+      <div class="demo-callout">
+        <p>
+          <strong>🚀 Try it live!</strong> Explore the full add-in interface right in your browser –
+          no Microsoft 365 account or Outlook installation needed.
+        </p>
+        <a class="demo-btn" href="src/demo/index.html">▶ Open Interactive Demo</a>
+      </div>
+      <div id="error">Could not load README.md.</div>
+      <div id="content"><p id="loading">Loading documentation…</p></div>
+    </main>
+    <script>
+      (async () => {
+        const contentEl = document.getElementById("content");
+        const errorEl = document.getElementById("error");
+        try {
+          const base = document.baseURI.replace(/\/[^/]*$/, "");
+          const res = await fetch(`${base}/README.md`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const md = await res.text();
+          contentEl.innerHTML = marked.parse(md);
+        } catch (err) {
+          errorEl.style.display = "block";
+          errorEl.textContent = `Could not load README.md: ${err.message}`;
+          contentEl.innerHTML = "";
+        }
+      })();
+    </script>
+  </body>
+</html>
