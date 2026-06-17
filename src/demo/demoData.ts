@@ -10,7 +10,6 @@ import type { AppSettings } from "../taskpane/types";
 const now = new Date().toISOString();
 
 export const DEMO_STORAGE_KEY = "outlookAutoReplyAutomater_settings";
-export const DEMO_SEEDED_FLAG = "outlookAutoReplyAutomater_demoSeeded";
 
 export const DEMO_DATA: AppSettings = {
   activeAutoReplyId: null,
@@ -187,7 +186,6 @@ export function seedDemoDataIfNeeded(): void {
 export function resetDemoData(): void {
   try {
     localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(DEMO_DATA));
-    localStorage.removeItem(DEMO_SEEDED_FLAG);
   } catch {
     // silently skip
   }

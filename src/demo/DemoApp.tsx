@@ -58,13 +58,8 @@ function DemoBanner() {
     loadFromStorage();
   }, [loadFromStorage]);
 
-  // Derive the index page URL relative to the current path
-  const indexUrl = (() => {
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    // Remove "src", "demo" segments that Vite nests under
-    const repoSegment = parts[0] ?? "";
-    return repoSegment ? `/${repoSegment}/` : "/";
-  })();
+  // Use Vite's injected base URL so this works both locally and on GitHub Pages
+  const indexUrl = import.meta.env.BASE_URL ?? "/";
 
   return (
     <div className={classes.banner} role="banner">
