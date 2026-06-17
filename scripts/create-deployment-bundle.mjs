@@ -40,7 +40,10 @@ async function main() {
   const manifestJson = `${JSON.stringify(deployedManifest, null, 2)}\n`;
   await fs.writeFile(outputManifestPath, manifestJson);
   await fs.writeFile(path.join(webDir, "manifest.json"), manifestJson);
-  await fs.writeFile(path.join(deploymentDir, "DEPLOY.md"), createDeploymentGuide(baseUrl));
+  await fs.writeFile(
+    path.join(deploymentDir, "DEPLOY.md"),
+    createDeploymentGuide(baseUrl),
+  );
 
   console.log(`Deployment bundle created at ${deploymentDir}`);
   console.log(`Hosted web assets: ${path.relative(repoRoot, webDir)}`);
@@ -82,7 +85,9 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log("Create a production deployment bundle for Outlook on Windows and Mac.");
+  console.log(
+    "Create a production deployment bundle for Outlook on Windows and Mac.",
+  );
   console.log("");
   console.log("Usage:");
   console.log("  npm run pack -- https://your-host.example.com");
@@ -110,7 +115,9 @@ function normalizeBaseUrl(input) {
   }
 
   if (["localhost", "127.0.0.1", "::1"].includes(parsedUrl.hostname)) {
-    throw new Error("DEPLOY_BASE_URL must be a hosted production URL, not localhost.");
+    throw new Error(
+      "DEPLOY_BASE_URL must be a hosted production URL, not localhost.",
+    );
   }
 
   return normalized;
@@ -123,7 +130,9 @@ async function ensureBuildOutput() {
     try {
       await fs.access(entryPath);
     } catch {
-      throw new Error(`Production build output is missing at ${entryPath}. Run npm run build first.`);
+      throw new Error(
+        `Production build output is missing at ${entryPath}. Run npm run build first.`,
+      );
     }
   }
 }
@@ -143,11 +152,27 @@ async function copyBuildOutput() {
 }
 
 async function copyIcons() {
-  const targetAssetsDir = path.join(webDir, "assets");
-  await fs.mkdir(targetAssetsDir, { recursive: true });
+  const targetAssetsDirs = [
+    path.join(webDir, "assets"),
+    path.join(deploymentDir, "assets"),
+  ];
+  const iconNames = [
+    "icon-16.png",
+    "icon-32.png",
+    "icon-80.png",
+    "icon-color.png",
+    "icon-outline.png",
+  ];
 
-  for (const iconName of ["icon-16.png", "icon-32.png", "icon-80.png", "icon-color.png", "icon-outline.png"]) {
-    await fs.copyFile(path.join(iconsDir, iconName), path.join(targetAssetsDir, iconName));
+  for (const targetAssetsDir of targetAssetsDirs) {
+    await fs.mkdir(targetAssetsDir, { recursive: true });
+
+    for (const iconName of iconNames) {
+      await fs.copyFile(
+        path.join(iconsDir, iconName),
+        path.join(targetAssetsDir, iconName),
+      );
+    }
   }
 }
 
@@ -163,7 +188,10 @@ async function copyEntry(sourcePath, targetPath) {
     const children = await fs.readdir(sourcePath);
 
     for (const child of children) {
-      await copyEntry(path.join(sourcePath, child), path.join(targetPath, child));
+      await copyEntry(
+        path.join(sourcePath, child),
+        path.join(targetPath, child),
+      );
     }
 
     return;
@@ -216,8 +244,12 @@ async function validateHostedEntries(baseUrl) {
       try {
         await fs.access(assetPath);
       } catch {
-        const relativeHtmlPath = path.relative(webDir, htmlPath).replaceAll(path.sep, "/");
-        throw new Error(`Hosted asset ${hostedUrl} referenced by ${relativeHtmlPath} is missing from the deployment bundle.`);
+        const relativeHtmlPath = path
+          .relative(webDir, htmlPath)
+          .replaceAll(path.sep, "/");
+        throw new Error(
+          `Hosted asset ${hostedUrl} referenced by ${relativeHtmlPath} is missing from the deployment bundle.`,
+        );
       }
     }
   }
@@ -231,7 +263,9 @@ async function collectFilesByExtension(rootDir, extension) {
     const entryPath = path.join(rootDir, entry.name);
 
     if (entry.isDirectory()) {
-      matchingPaths.push(...(await collectFilesByExtension(entryPath, extension)));
+      matchingPaths.push(
+        ...(await collectFilesByExtension(entryPath, extension)),
+      );
       continue;
     }
 
@@ -244,29 +278,41 @@ async function collectFilesByExtension(rootDir, extension) {
 }
 
 function rewriteHostedHtmlUrls(html, basePath) {
-  return html.replace(/(src|href)=(['"])(\/[^'"]+)\2/g, (match, attributeName, quote, absolutePath) => {
-    const rewrittenPath = normalizeHostedAssetReference(absolutePath, basePath);
+  return html.replace(
+    /(src|href)=(['"])(\/[^'"]+)\2/g,
+    (match, attributeName, quote, absolutePath) => {
+      const rewrittenPath = normalizeHostedAssetReference(
+        absolutePath,
+        basePath,
+      );
 
-    if (!rewrittenPath) {
-      return match;
-    }
+      if (!rewrittenPath) {
+        return match;
+      }
 
-    return `${attributeName}=${quote}${rewrittenPath}${quote}`;
-  });
+      return `${attributeName}=${quote}${rewrittenPath}${quote}`;
+    },
+  );
 }
 
 function extractHostedAssetUrls(html, basePath) {
   const urls = [];
 
-  html.replace(/(src|href)=(['"])(\/[^'"]+)\2/g, (match, _attributeName, _quote, absolutePath) => {
-    const rewrittenPath = normalizeHostedAssetReference(absolutePath, basePath);
+  html.replace(
+    /(src|href)=(['"])(\/[^'"]+)\2/g,
+    (match, _attributeName, _quote, absolutePath) => {
+      const rewrittenPath = normalizeHostedAssetReference(
+        absolutePath,
+        basePath,
+      );
 
-    if (rewrittenPath) {
-      urls.push(rewrittenPath);
-    }
+      if (rewrittenPath) {
+        urls.push(rewrittenPath);
+      }
 
-    return match;
-  });
+      return match;
+    },
+  );
 
   return urls;
 }
@@ -300,8 +346,11 @@ function findHostedSubpath(assetPath) {
 }
 
 function normalizeHostedPathname(pathname) {
-  const normalizedPathname = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
-  return normalizedPathname.startsWith("/") ? normalizedPathname : `/${normalizedPathname}`;
+  const normalizedPathname =
+    pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+  return normalizedPathname.startsWith("/")
+    ? normalizedPathname
+    : `/${normalizedPathname}`;
 }
 
 function joinHostedPath(basePath, relativePath) {
@@ -325,7 +374,10 @@ function rewriteManifestHostedUrls(value, baseUrl) {
 
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, rewriteManifestHostedUrls(nestedValue, baseUrl)]),
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        rewriteManifestHostedUrls(nestedValue, baseUrl),
+      ]),
     );
   }
 
