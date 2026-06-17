@@ -3,8 +3,8 @@
   "tasks": [
     // ──────────────────────────────────────────────────────────────────────────
     // Build
-    // Bumps the patch version automatically (via prebuild hook), compiles
-    // TypeScript, and bundles with Vite.
+    // Compiles TypeScript and bundles with Vite.
+    // Version bumping is explicit via the Bump Version tasks below.
     // ──────────────────────────────────────────────────────────────────────────
     {
       "label": "Build",
@@ -28,7 +28,7 @@
     },
     // ──────────────────────────────────────────────────────────────────────────
     // Build & Install Locally
-    // Bumps version, builds the project, then sideloads the add-in into the
+    // Builds the project, then sideloads the add-in into the
     // locally installed Outlook desktop client for immediate testing.
     // Requires the office-addin-debugging package (included as a dev dep).
     // ──────────────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@
     },
     // ──────────────────────────────────────────────────────────────────────────
     // Build, Deploy & Install
-    // Bumps version, builds the project, creates the hosted production bundle
+    // Builds the project, creates the hosted production bundle
     // for the public website, then sideloads the production manifest so
     // Outlook loads the released add-in from the hosted site instead of
     // localhost.
@@ -258,9 +258,29 @@
       }
     },
     // ──────────────────────────────────────────────────────────────────────────
+    // Bump Version
+    // Manually increments the patch version.
+    // Use this as the default explicit version bump action.
+    // ──────────────────────────────────────────────────────────────────────────
+    {
+      "label": "Bump Version",
+      "type": "shell",
+      "command": "npm run version:bump",
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    // ──────────────────────────────────────────────────────────────────────────
     // Bump Version (patch)
     // Manually increments the build/patch version without triggering a build.
-    // Run this if you need to bump the version outside of a build cycle.
+    // Run this explicitly when you want to release a new patch version.
     // ──────────────────────────────────────────────────────────────────────────
     {
       "label": "Bump Version (patch)",

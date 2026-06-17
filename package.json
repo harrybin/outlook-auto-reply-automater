@@ -1,11 +1,10 @@
 {
   "name": "outlook-auto-reply-automater",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "An Outlook add-in that automatically manages auto-reply messages based on calendar appointments, location, and Teams status.",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/bump-version.mjs",
     "build": "tsc && vite build",
     "build:ci": "tsc && vite build",
     "build:local": "npm run build && office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",

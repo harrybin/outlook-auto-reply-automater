@@ -3,12 +3,12 @@
  * scripts/bump-version.mjs
  *
  * Increments the build (patch) segment of the version in both
- * package.json and manifest.json on every build.
+ * package.json and manifest.json when run explicitly.
  *
  * Version format: MAJOR.MINOR.PATCH
  * This script increments PATCH by 1.
  *
- * Usage (called automatically via the "prebuild" npm hook):
+ * Usage:
  *   node scripts/bump-version.mjs
  *
  * Optional flag to also bump MINOR (resets PATCH to 0):
@@ -63,7 +63,7 @@ writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 const npmExecutable = process.platform === "win32" ? "npm.cmd" : "npm";
 const lockUpdate = spawnSync(
   npmExecutable,
-  ["install", "--package-lock-only"],
+  ["install"],
   {
     cwd: root,
     stdio: "inherit",

@@ -3,10 +3,12 @@ import type { ChangeEvent } from "react";
 import {
   Button,
   FluentProvider,
+  type Theme,
   Title3,
   makeStyles,
   shorthands,
   tokens,
+  webDarkTheme,
   webLightTheme,
 } from "@fluentui/react-components";
 import { AutoReplyList } from "./components/AutoReplyList";
@@ -69,6 +71,54 @@ const useStyles = makeStyles({
   },
 });
 
+function parseHexChannel(value: string): number {
+  return Number.parseInt(value, 16);
+}
+
+function getHexColorLuminance(hexColor: string): number | null {
+  const normalized = hexColor.trim();
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(normalized);
+  if (!match) {
+    return null;
+  }
+
+  const rawHex = match[1].toLowerCase();
+  const expandedHex =
+    rawHex.length === 3
+      ? `${rawHex[0]}${rawHex[0]}${rawHex[1]}${rawHex[1]}${rawHex[2]}${rawHex[2]}`
+      : rawHex;
+
+  const red = parseHexChannel(expandedHex.slice(0, 2));
+  const green = parseHexChannel(expandedHex.slice(2, 4));
+  const blue = parseHexChannel(expandedHex.slice(4, 6));
+
+  return (red * 299 + green * 587 + blue * 114) / 1000;
+}
+
+function resolveThemeFromOfficeTheme(officeTheme?: Office.OfficeTheme): Theme {
+  const bodyBackground = officeTheme?.bodyBackgroundColor;
+  const controlBackground = officeTheme?.controlBackgroundColor;
+  const luminance = bodyBackground
+    ? getHexColorLuminance(bodyBackground)
+    : controlBackground
+      ? getHexColorLuminance(controlBackground)
+      : null;
+
+  if (luminance === null) {
+    return webLightTheme;
+  }
+
+  return luminance < 128 ? webDarkTheme : webLightTheme;
+}
+
+function getInitialTheme(): Theme {
+  if (typeof Office === "undefined") {
+    return webLightTheme;
+  }
+
+  return resolveThemeFromOfficeTheme(Office.context?.officeTheme);
+}
+
 export function App() {
   const classes = useStyles();
   const loadFromStorage = useStore((state) => state.loadFromStorage);
@@ -76,10 +126,60 @@ export function App() {
   const importSettings = useStore((state) => state.importSettings);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
 
   useEffect(() => {
     loadFromStorage();
   }, [loadFromStorage]);
+
+  useEffect(() => {
+    if (typeof Office === "undefined") {
+      return;
+    }
+
+    let isDisposed = false;
+    const applyTheme = (officeTheme?: Office.OfficeTheme) => {
+      if (isDisposed) {
+        return;
+      }
+      const nextTheme = resolveThemeFromOfficeTheme(
+        officeTheme ?? Office.context?.officeTheme,
+      );
+      setTheme(nextTheme);
+    };
+
+    const supportsThemeEvent =
+      Office.context?.requirements?.isSetSupported("Mailbox", "1.14") ?? false;
+    const onOfficeThemeChanged = (event: Office.OfficeThemeChangedEventArgs) => {
+      applyTheme(event.officeTheme);
+    };
+
+    void Office.onReady().then(() => {
+      applyTheme();
+
+      if (!supportsThemeEvent) {
+        return;
+      }
+
+      Office.context?.mailbox?.addHandlerAsync(
+        Office.EventType.OfficeThemeChanged,
+        onOfficeThemeChanged,
+      );
+    });
+
+    return () => {
+      isDisposed = true;
+
+      if (!supportsThemeEvent) {
+        return;
+      }
+
+      Office.context?.mailbox?.removeHandlerAsync(
+        Office.EventType.OfficeThemeChanged,
+        onOfficeThemeChanged,
+      );
+    };
+  }, []);
 
   const handleExport = () => {
     const json = exportSettings();
@@ -115,7 +215,7 @@ export function App() {
   };
 
   return (
-    <FluentProvider theme={webLightTheme} className={classes.page}>
+    <FluentProvider theme={theme} className={classes.page}>
       <main className={classes.shell}>
         <header className={classes.header}>
           <div className={classes.headerTopRow}>
