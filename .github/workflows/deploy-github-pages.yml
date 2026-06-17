@@ -18,7 +18,7 @@ jobs:
     build:
         runs-on: ubuntu-latest
         env:
-            DEPLOY_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+            DEPLOY_BASE_URL: ${{ vars.DEPLOY_BASE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
             VITE_BASE_PATH: ./
         steps:
             - name: Checkout
