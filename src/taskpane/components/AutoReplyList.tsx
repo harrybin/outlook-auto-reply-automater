@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Button,
   Dialog,
@@ -22,6 +22,7 @@ import {
 } from "@fluentui/react-icons";
 import type { AutoReplyMessage } from "../types";
 import { useStore } from "../useStore";
+import { EmojiPicker } from "./EmojiPicker";
 
 export function AutoReplyList() {
   const messages = useStore((s) => s.autoReplyMessages);
@@ -85,6 +86,78 @@ export function AutoReplyList() {
   };
 
   const isOpen = isNew || editing !== null;
+
+  // Refs for cursor-aware emoji insertion
+  const editorContainerRef = useRef<HTMLDivElement | null>(null);
+  const blurRangeRef = useRef<Range | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const savedTextareaCursorRef = useRef<{ start: number; end: number } | null>(
+    null,
+  );
+
+  const handleEditorBlur = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      blurRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const handleTextareaBlur = () => {
+    const ta = textareaRef.current;
+    if (ta) {
+      savedTextareaCursorRef.current = {
+        start: ta.selectionStart,
+        end: ta.selectionEnd,
+      };
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    if (draft.isHtml) {
+      const container = editorContainerRef.current;
+      const contentEditable = container?.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement | null;
+      if (contentEditable && blurRangeRef.current) {
+        contentEditable.focus();
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(blurRangeRef.current);
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const textNode = document.createTextNode(emoji);
+          range.insertNode(textNode);
+          range.setStartAfter(textNode);
+          range.setEndAfter(textNode);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          contentEditable.dispatchEvent(new Event("input", { bubbles: true }));
+          return;
+        }
+      }
+      // Fallback: append to body string
+      setDraft((p) => ({ ...p, body: p.body + emoji }));
+    } else {
+      const cursor = savedTextareaCursorRef.current;
+      const pos = cursor ?? { start: draft.body.length, end: draft.body.length };
+      const newBody =
+        draft.body.substring(0, pos.start) +
+        emoji +
+        draft.body.substring(pos.end);
+      setDraft((p) => ({ ...p, body: newBody }));
+      // Restore cursor position after React re-renders
+      const newCursorPos = pos.start + emoji.length;
+      savedTextareaCursorRef.current = { start: newCursorPos, end: newCursorPos };
+      requestAnimationFrame(() => {
+        const ta = textareaRef.current;
+        if (ta) {
+          ta.selectionStart = newCursorPos;
+          ta.selectionEnd = newCursorPos;
+        }
+      });
+    }
+  };
 
   return (
     <div
@@ -169,6 +242,16 @@ export function AutoReplyList() {
                 />
               </Field>
               <Field label="Message Body" required>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <EmojiPicker onEmojiSelect={insertEmoji} />
+                </div>
                 {draft.isHtml ? (
                   <Editor
                     value={draft.body}
@@ -177,6 +260,8 @@ export function AutoReplyList() {
                     }
                     placeholder="Enter your auto-reply message..."
                     containerProps={{
+                      ref: editorContainerRef,
+                      onBlur: handleEditorBlur,
                       style: {
                         minHeight: "240px",
                         border: `1px solid ${tokens.colorNeutralStroke1}`,
@@ -187,11 +272,13 @@ export function AutoReplyList() {
                   />
                 ) : (
                   <Textarea
+                    ref={textareaRef}
                     rows={6}
                     value={draft.body}
                     onChange={(_e, d) =>
                       setDraft((p) => ({ ...p, body: d.value }))
                     }
+                    onBlur={handleTextareaBlur}
                     placeholder="Enter your auto-reply message..."
                   />
                 )}
