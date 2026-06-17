@@ -22,6 +22,9 @@ const SCOPES = [
 // Replace with your Azure AD app registration client ID
 const CLIENT_ID = import.meta.env.VITE_AAD_CLIENT_ID ?? "";
 const TENANT_ID = import.meta.env.VITE_AAD_TENANT_ID ?? "common";
+const REDIRECT_URI =
+  import.meta.env.VITE_AAD_REDIRECT_URI ??
+  `${window.location.origin}${window.location.pathname}`;
 
 let msalInstance: PublicClientApplication | null = null;
 
@@ -31,7 +34,7 @@ export function getMsalInstance(): PublicClientApplication {
       auth: {
         clientId: CLIENT_ID,
         authority: `https://login.microsoftonline.com/${TENANT_ID}`,
-        redirectUri: window.location.origin,
+        redirectUri: REDIRECT_URI,
       },
       cache: {
         cacheLocation: "sessionStorage",

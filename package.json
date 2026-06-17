@@ -7,6 +7,7 @@
     "dev": "vite",
     "prebuild": "node scripts/bump-version.mjs",
     "build": "tsc && vite build",
+    "build:ci": "tsc && vite build",
     "build:local": "npm run build && office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",
     "preview": "vite preview --https",
     "lint": "eslint src tests --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",

@@ -18,6 +18,7 @@ function getHttpsConfig(): ServerOptions | undefined {
 
 export default defineConfig(() => ({
   plugins: [react()],
+  base: process.env.VITE_BASE_PATH ?? "/",
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
