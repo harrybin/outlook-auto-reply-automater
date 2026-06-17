@@ -34,15 +34,15 @@ export default defineConfig(() => ({
   },
   server: {
     port: 3000,
-    strictPort: true,
-    https: undefined,
+    strictPort: false,
+    https: getHttpsConfig(),
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
   },
   preview: {
     port: 3001,
-    https: undefined,
+    https: getHttpsConfig(),
   },
   test: {
     globals: true,
