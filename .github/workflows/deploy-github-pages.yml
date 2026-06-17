@@ -18,8 +18,8 @@ jobs:
     build:
         runs-on: ubuntu-latest
         env:
-            DEPLOY_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-            VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      DEPLOY_BASE_URL: https://outlook-auto-reply-automater.harrybin.de
+      VITE_BASE_PATH: /
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -38,6 +38,9 @@ jobs:
 
             - name: Create deployment bundle
               run: npm run pack -- "$DEPLOY_BASE_URL"
+
+            - name: Set Pages custom domain
+              run: echo "outlook-auto-reply-automater.harrybin.de" > dist/deployment/web/CNAME
 
             - name: Upload manifest artifact
               uses: actions/upload-artifact@v4

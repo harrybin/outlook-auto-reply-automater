@@ -28,6 +28,7 @@
     "validate": "office-addin-manifest validate manifest.json",
     "publish": "office-addin publish",
     "pack": "node scripts/create-deployment-bundle.mjs",
+    "pack:prod": "node scripts/create-deployment-bundle.mjs https://outlook-auto-reply-automater.harrybin.de",
     "pack:manifest": "office-addin-manifest export --manifest manifest.json --output dist/manifest.json"
   },
   "dependencies": {

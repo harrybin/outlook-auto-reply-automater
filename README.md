@@ -152,14 +152,14 @@ After hosting `dist/deployment/web/`, sideload or deploy `dist/deployment/manife
 This repository includes a GitHub Actions workflow at `.github/workflows/deploy-github-pages.yml`.
 
 - On every push to `main` (or manual trigger), it:
-    - Builds the web app with a Pages-compatible base path.
-    - Creates a production deployment bundle using `https://<owner>.github.io/<repo>` as `DEPLOY_BASE_URL`.
+    - Builds the web app for the custom-domain root path.
+    - Creates a production deployment bundle using `https://outlook-auto-reply-automater.harrybin.de` as `DEPLOY_BASE_URL`.
     - Publishes `dist/deployment/web/` to GitHub Pages.
     - Uploads `dist/deployment/manifest.json` as a workflow artifact named `outlook-addin-manifest`.
 
 Before using production sign-in on GitHub Pages, add this redirect URI to your Azure app registration:
 
-- `https://<owner>.github.io/<repo>/src/taskpane/index.html`
+- `https://outlook-auto-reply-automater.harrybin.de/src/taskpane/index.html`
 
 If needed, you can also override the redirect URI with `VITE_AAD_REDIRECT_URI`.
 
