@@ -1,65 +1,65 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        branches: [main]
+    workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+    contents: read
+    pages: write
+    id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+    group: pages
+    cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      DEPLOY_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-      VITE_BASE_PATH: /${{ github.event.repository.name }}/
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    build:
+        runs-on: ubuntu-latest
+        env:
+            DEPLOY_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+            VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build web assets
-        run: npm run build:ci
+            - name: Build web assets
+              run: npm run build:ci
 
-      - name: Create deployment bundle
-        run: npm run pack -- "$DEPLOY_BASE_URL"
+            - name: Create deployment bundle
+              run: npm run pack -- "$DEPLOY_BASE_URL"
 
-      - name: Upload manifest artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: outlook-addin-manifest
-          path: dist/deployment/manifest.json
+            - name: Upload manifest artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: outlook-addin-manifest
+                  path: dist/deployment/manifest.json
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+            - name: Setup Pages
+              uses: actions/configure-pages@v5
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/deployment/web
+            - name: Upload Pages artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: dist/deployment/web
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
