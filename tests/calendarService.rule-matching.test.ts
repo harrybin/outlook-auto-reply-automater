@@ -63,7 +63,7 @@ describe("appointmentMatchesProfile regex rules", () => {
       field: "title",
       operator: "regex",
       value: "/^vacation\\s+\\d+$/i",
-      caseSensitive: true,
+      caseSensitive: false,
     });
 
     expect(appointmentMatchesProfile(APPOINTMENT, profile)).toBe(true);
