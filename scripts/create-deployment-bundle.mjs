@@ -33,7 +33,9 @@ async function main() {
   const deployedManifest = rewriteLocalhostUrls(manifest, baseUrl);
   const outputManifestPath = path.join(deploymentDir, "manifest.json");
 
-  await fs.writeFile(outputManifestPath, `${JSON.stringify(deployedManifest, null, 2)}\n`);
+  const manifestJson = `${JSON.stringify(deployedManifest, null, 2)}\n`;
+  await fs.writeFile(outputManifestPath, manifestJson);
+  await fs.writeFile(path.join(webDir, "manifest.json"), manifestJson);
   await fs.writeFile(path.join(deploymentDir, "DEPLOY.md"), createDeploymentGuide(baseUrl));
 
   console.log(`Deployment bundle created at ${deploymentDir}`);

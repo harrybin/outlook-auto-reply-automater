@@ -2,6 +2,25 @@
 
 An Outlook add-in that automatically manages your out-of-office auto-reply messages based on calendar appointments, location, and Microsoft Teams status.
 
+## ⬇️ Install the Add-in
+
+The latest production manifest is always available directly from the hosted GitHub Pages deployment:
+
+**[📥 Download manifest.json](https://harrybin.github.io/outlook-auto-reply-automater/manifest.json)**
+
+### How to install in Outlook
+
+1. Click the download link above and save `manifest.json` to your computer.
+2. Open **Outlook** (desktop or web).
+3. Go to **Get Add-ins** / **Apps** (or **Manage Add-ins** in Outlook on the web).
+4. Choose **My add-ins** → **Add a custom add-in** → **Add from file…**
+5. Select the downloaded `manifest.json`.
+6. The **Auto-Reply Automater** add-in will appear in your Outlook ribbon or Apps menu.
+
+> **Note:** This manifest points to `https://harrybin.github.io/outlook-auto-reply-automater` — no local server required.
+
+---
+
 ## Features
 
 - **Calendar-based automation** – Trigger auto-reply messages based on appointment keywords, duration, busy status, and categories.
