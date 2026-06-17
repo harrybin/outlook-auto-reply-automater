@@ -150,7 +150,9 @@ export function App() {
 
     const supportsThemeEvent =
       Office.context?.requirements?.isSetSupported("Mailbox", "1.14") ?? false;
-    const onOfficeThemeChanged = (event: Office.OfficeThemeChangedEventArgs) => {
+    const onOfficeThemeChanged = (
+      event: Office.OfficeThemeChangedEventArgs,
+    ) => {
       applyTheme(event.officeTheme);
     };
 
@@ -196,9 +198,7 @@ export function App() {
     setStatusMessage("Settings exported.");
   };
 
-  const handleImportFile = async (
-     event: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
