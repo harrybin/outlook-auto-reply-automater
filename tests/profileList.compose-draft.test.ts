@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildCopilotDraftForRule } from "@/taskpane/components/ProfileList";
+import {
+  buildCopilotDraftForRule,
+  canCreateOutlookMessageForRule,
+} from "@/taskpane/components/ProfileList";
 import type { AutoReplyMessage, AutomationProfile } from "@/taskpane/types";
 
 const PROFILE: AutomationProfile = {
@@ -75,5 +78,33 @@ describe("buildCopilotDraftForRule", () => {
     const draft = buildCopilotDraftForRule(PROFILE, plainTextMessage);
 
     expect(draft.htmlBody).toContain("Line &lt;1&gt;<br/>Line 2");
+  });
+});
+
+describe("canCreateOutlookMessageForRule", () => {
+  it("returns true only when Outlook compose API is available", () => {
+    const globalWithOffice = globalThis as unknown as {
+      Office?: { context?: { mailbox?: { displayNewMessageForm?: () => void } } };
+    };
+    const office = globalWithOffice.Office;
+    globalWithOffice.Office = {
+      context: {
+        mailbox: {
+          displayNewMessageForm: () => undefined,
+        },
+      },
+    };
+
+    expect(canCreateOutlookMessageForRule()).toBe(true);
+
+    globalWithOffice.Office = {
+      context: {
+        mailbox: {},
+      },
+    };
+
+    expect(canCreateOutlookMessageForRule()).toBe(false);
+
+    globalWithOffice.Office = office;
   });
 });

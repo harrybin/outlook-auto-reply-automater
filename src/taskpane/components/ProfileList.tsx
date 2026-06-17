@@ -62,6 +62,10 @@ interface OutlookMessageDraft {
   htmlBody: string;
 }
 
+interface OutlookMailboxContext {
+  displayNewMessageForm?: (message: OutlookMessageDraft) => void;
+}
+
 function defaultProfile(): ProfileDraft {
   return {
     name: "",
@@ -140,6 +144,17 @@ ${formatMessageBody(message)}`,
   };
 }
 
+function getOutlookMailbox(): OutlookMailboxContext | undefined {
+  const officeGlobal = (
+    globalThis as { Office?: { context?: { mailbox?: OutlookMailboxContext } } }
+  ).Office;
+  return officeGlobal?.context?.mailbox as OutlookMailboxContext | undefined;
+}
+
+export function canCreateOutlookMessageForRule(): boolean {
+  return Boolean(getOutlookMailbox()?.displayNewMessageForm);
+}
+
 export function ProfileList() {
   const profiles = useStore((s) => s.automationProfiles);
   const messages = useStore((s) => s.autoReplyMessages);
@@ -214,8 +229,7 @@ export function ProfileList() {
     const message = messages.find((m) => m.id === profile.autoReplyMessageId);
     if (!message) return;
 
-    const mailbox =
-      typeof Office === "undefined" ? undefined : Office.context?.mailbox;
+    const mailbox = getOutlookMailbox();
     if (!mailbox?.displayNewMessageForm) return;
 
     mailbox.displayNewMessageForm(buildCopilotDraftForRule(profile, message));
@@ -259,6 +273,7 @@ export function ProfileList() {
 
       {profiles.map((p) => {
         const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
+        const canCreateMessage = hasMessage && canCreateOutlookMessageForRule();
         return (
         <div
           key={p.id}
@@ -292,7 +307,7 @@ export function ProfileList() {
               appearance="secondary"
               size="small"
               onClick={() => createMessageForRule(p)}
-              disabled={!hasMessage}
+              disabled={!canCreateMessage}
             >
               Create Message
             </Button>
