@@ -217,6 +217,37 @@ scripts/
 4. **Set priorities** – When multiple profiles match, the one with the lowest priority number wins.
 5. **Let it run** – The add-in monitors your calendar and automatically enables/disables your Outlook auto-reply based on your configured rules.
 
+## When Rules Are Applied
+
+Understanding when evaluation happens helps you predict exactly when your auto-reply will turn on, change, or turn off.
+
+### Calendar-based rules
+
+Rules are evaluated against your upcoming calendar appointments each time the add-in runs its check. An appointment is considered **active** when the current time falls inside the window defined by the profile's timing settings:
+
+- **Activation**: `appointment start − hoursBeforeAppointment` (default: at the start time)
+- **Deactivation**: `appointment end + hoursAfterAppointment` (default: at the end time)
+
+If the `enableBefore` or `enableAfter` toggles are off the lead/lag time is ignored and the boundary is the appointment's exact start or end time.
+
+### Location-based rules
+
+Location conditions (geofence, WiFi network, internet connectivity) are re-evaluated at the interval configured in the **Location Settings** (`pollIntervalSeconds`, default: 60 seconds). The auto-reply can change as soon as the next poll detects a condition change.
+
+### When the active reply message may change
+
+The active auto-reply message is updated whenever any of the following events occur:
+
+| Trigger | Effect |
+|---------|--------|
+| A matching appointment enters its activation window | Auto-reply is **enabled** with the message linked to the matching profile |
+| An appointment's deactivation window expires (or no appointments match) | Auto-reply is **disabled** |
+| A higher-priority profile's appointment becomes active while a lower-priority one is already running | Auto-reply **switches** to the higher-priority profile's message |
+| A location condition changes (geofence, WiFi, connectivity) and matches a location rule | Auto-reply is **enabled or updated** with the message linked to that rule |
+| The location condition is no longer satisfied | Auto-reply reverts to the calendar-based state (on or off) |
+
+> **Tip:** If you have overlapping appointments that could match different profiles, the profile with the **lowest priority number** wins. Check your priority values if the wrong message activates.
+
 ## Technology Stack
 
 - [React 18](https://react.dev/) – UI framework
