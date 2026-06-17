@@ -20,13 +20,23 @@ import { loadSettings, saveSettings } from "./services/storageService";
 
 interface AppStore extends AppSettings {
   // ── Message CRUD ───────────────────────────────────────────────────────────
-  addMessage: (msg: Omit<AutoReplyMessage, "id" | "createdAt" | "updatedAt">) => void;
-  updateMessage: (id: string, changes: Partial<Omit<AutoReplyMessage, "id">>) => void;
+  addMessage: (
+    msg: Omit<AutoReplyMessage, "id" | "createdAt" | "updatedAt">,
+  ) => void;
+  updateMessage: (
+    id: string,
+    changes: Partial<Omit<AutoReplyMessage, "id">>,
+  ) => void;
   deleteMessage: (id: string) => void;
 
   // ── Profile CRUD ──────────────────────────────────────────────────────────
-  addProfile: (profile: Omit<AutomationProfile, "id" | "createdAt" | "updatedAt">) => void;
-  updateProfile: (id: string, changes: Partial<Omit<AutomationProfile, "id">>) => void;
+  addProfile: (
+    profile: Omit<AutomationProfile, "id" | "createdAt" | "updatedAt">,
+  ) => void;
+  updateProfile: (
+    id: string,
+    changes: Partial<Omit<AutomationProfile, "id">>,
+  ) => void;
   deleteProfile: (id: string) => void;
 
   // ── Location settings ─────────────────────────────────────────────────────
@@ -38,7 +48,9 @@ interface AppStore extends AppSettings {
   // ── Persistence ───────────────────────────────────────────────────────────
   loadFromStorage: () => void;
   exportSettings: () => string;
-  importSettings: (rawSettings: string) => { success: true } | { success: false; error: string };
+  importSettings: (
+    rawSettings: string,
+  ) => { success: true } | { success: false; error: string };
 }
 
 const BUSY_STATUSES: AppointmentBusyStatus[] = [
@@ -100,17 +112,30 @@ function asBoolean(value: unknown, fallback: boolean): boolean {
   return isBoolean(value) ? value : fallback;
 }
 
-function asOneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
-  return isString(value) && allowed.includes(value as T) ? (value as T) : fallback;
+function asOneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  return isString(value) && allowed.includes(value as T)
+    ? (value as T)
+    : fallback;
 }
 
 function asOptionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 
 function normalizeMessage(value: unknown): AutoReplyMessage | null {
   if (!isRecord(value)) return null;
-  if (!isString(value.id) || !isString(value.name) || !isString(value.subject) || !isString(value.body)) {
+  if (
+    !isString(value.id) ||
+    !isString(value.name) ||
+    !isString(value.subject) ||
+    !isString(value.body)
+  ) {
     return null;
   }
 
@@ -176,7 +201,9 @@ function normalizeLocationRule(value: unknown): LocationRule | null {
     trigger,
     autoReplyMessageId: value.autoReplyMessageId,
     teamsStatus,
-    teamsStatusMessage: isString(value.teamsStatusMessage) ? value.teamsStatusMessage : undefined,
+    teamsStatusMessage: isString(value.teamsStatusMessage)
+      ? value.teamsStatusMessage
+      : undefined,
   };
 }
 
@@ -200,17 +227,24 @@ function normalizeLocationSettings(value: unknown): LocationSettings {
 }
 
 function normalizeProfile(value: unknown): AutomationProfile | null {
-  if (!isRecord(value) || !isString(value.id) || !isString(value.name) || !isString(value.autoReplyMessageId)) {
+  if (
+    !isRecord(value) ||
+    !isString(value.id) ||
+    !isString(value.name) ||
+    !isString(value.autoReplyMessageId)
+  ) {
     return null;
   }
 
-  const keywordRulesSource = isRecord(value.matchRules) && Array.isArray(value.matchRules.keywordRules)
-    ? value.matchRules.keywordRules
-    : [];
+  const keywordRulesSource =
+    isRecord(value.matchRules) && Array.isArray(value.matchRules.keywordRules)
+      ? value.matchRules.keywordRules
+      : [];
 
   const keywordRules = keywordRulesSource
     .map((rule) => {
-      if (!isRecord(rule) || !isString(rule.id) || !isString(rule.value)) return null;
+      if (!isRecord(rule) || !isString(rule.id) || !isString(rule.value))
+        return null;
       return {
         id: rule.id,
         field: asOneOf(rule.field, MATCH_FIELDS, "title"),
@@ -219,22 +253,35 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
         caseSensitive: asBoolean(rule.caseSensitive, false),
       };
     })
-    .filter((rule): rule is AutomationProfile["matchRules"]["keywordRules"][number] => rule !== null);
+    .filter(
+      (rule): rule is AutomationProfile["matchRules"]["keywordRules"][number] =>
+        rule !== null,
+    );
 
-  const durationRule = isRecord(value.matchRules) && isRecord(value.matchRules.durationRule)
-    ? value.matchRules.durationRule
-    : {};
-  const busyStatusRule = isRecord(value.matchRules) && isRecord(value.matchRules.busyStatusRule)
-    ? value.matchRules.busyStatusRule
-    : {};
+  const durationRule =
+    isRecord(value.matchRules) && isRecord(value.matchRules.durationRule)
+      ? value.matchRules.durationRule
+      : {};
+  const busyStatusRule =
+    isRecord(value.matchRules) && isRecord(value.matchRules.busyStatusRule)
+      ? value.matchRules.busyStatusRule
+      : {};
 
-  const statusesSource = Array.isArray(busyStatusRule.statuses) ? busyStatusRule.statuses : [];
+  const statusesSource = Array.isArray(busyStatusRule.statuses)
+    ? busyStatusRule.statuses
+    : [];
   const statuses = statusesSource
-    .map((status) => (isString(status) ? asOneOf(status, BUSY_STATUSES, "busy") : null))
+    .map((status) =>
+      isString(status) ? asOneOf(status, BUSY_STATUSES, "busy") : null,
+    )
     .filter((status): status is AppointmentBusyStatus => status !== null);
 
-  const timingSettings = isRecord(value.timingSettings) ? value.timingSettings : {};
-  const teamsStatusSettings = isRecord(value.teamsStatusSettings) ? value.teamsStatusSettings : {};
+  const timingSettings = isRecord(value.timingSettings)
+    ? value.timingSettings
+    : {};
+  const teamsStatusSettings = isRecord(value.teamsStatusSettings)
+    ? value.teamsStatusSettings
+    : {};
 
   return {
     id: value.id,
@@ -255,18 +302,36 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
         enabled: asBoolean(busyStatusRule.enabled, false),
         statuses,
       },
-      combinator: asOneOf(value.matchRules && isRecord(value.matchRules) ? value.matchRules.combinator : undefined, ["AND", "OR"], "AND"),
+      combinator: asOneOf(
+        value.matchRules && isRecord(value.matchRules)
+          ? value.matchRules.combinator
+          : undefined,
+        ["AND", "OR"],
+        "AND",
+      ),
     },
     timingSettings: {
       enableBefore: asBoolean(timingSettings.enableBefore, false),
-      hoursBeforeAppointment: asNonNegativeNumber(timingSettings.hoursBeforeAppointment, 0),
+      hoursBeforeAppointment: asNonNegativeNumber(
+        timingSettings.hoursBeforeAppointment,
+        0,
+      ),
       enableAfter: asBoolean(timingSettings.enableAfter, false),
-      hoursAfterAppointment: asNonNegativeNumber(timingSettings.hoursAfterAppointment, 0),
+      hoursAfterAppointment: asNonNegativeNumber(
+        timingSettings.hoursAfterAppointment,
+        0,
+      ),
     },
     teamsStatusSettings: {
       enabled: asBoolean(teamsStatusSettings.enabled, false),
-      statusWhenActive: asOneOf(teamsStatusSettings.statusWhenActive, TEAMS_STATUSES, "Away"),
-      statusMessageWhenActive: asString(teamsStatusSettings.statusMessageWhenActive),
+      statusWhenActive: asOneOf(
+        teamsStatusSettings.statusWhenActive,
+        TEAMS_STATUSES,
+        "Away",
+      ),
+      statusMessageWhenActive: asString(
+        teamsStatusSettings.statusMessageWhenActive,
+      ),
       restoreOnEnd: asBoolean(teamsStatusSettings.restoreOnEnd, true),
     },
   };
@@ -275,8 +340,12 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
 function normalizeImportedSettings(value: unknown): AppSettings | null {
   if (!isRecord(value)) return null;
 
-  const messagesSource = Array.isArray(value.autoReplyMessages) ? value.autoReplyMessages : [];
-  const profilesSource = Array.isArray(value.automationProfiles) ? value.automationProfiles : [];
+  const messagesSource = Array.isArray(value.autoReplyMessages)
+    ? value.autoReplyMessages
+    : [];
+  const profilesSource = Array.isArray(value.automationProfiles)
+    ? value.automationProfiles
+    : [];
 
   const autoReplyMessages = messagesSource
     .map((message) => normalizeMessage(message))
@@ -286,9 +355,10 @@ function normalizeImportedSettings(value: unknown): AppSettings | null {
     .map((profile) => normalizeProfile(profile))
     .filter((profile): profile is AutomationProfile => profile !== null);
 
-  const activeAutoReplyId = isString(value.activeAutoReplyId) || value.activeAutoReplyId === null
-    ? value.activeAutoReplyId
-    : null;
+  const activeAutoReplyId =
+    isString(value.activeAutoReplyId) || value.activeAutoReplyId === null
+      ? value.activeAutoReplyId
+      : null;
 
   return {
     autoReplyMessages,
@@ -307,9 +377,17 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ── Messages ──────────────────────────────────────────────────────────────
   addMessage(msg) {
-    const message: AutoReplyMessage = { ...msg, id: nanoid(), createdAt: now(), updatedAt: now() };
+    const message: AutoReplyMessage = {
+      ...msg,
+      id: nanoid(),
+      createdAt: now(),
+      updatedAt: now(),
+    };
     set((s) => {
-      const updated = { ...s, autoReplyMessages: [...s.autoReplyMessages, message] };
+      const updated = {
+        ...s,
+        autoReplyMessages: [...s.autoReplyMessages, message],
+      };
       saveSettings(updated);
       return updated;
     });
@@ -318,7 +396,7 @@ export const useStore = create<AppStore>((set, get) => ({
   updateMessage(id, changes) {
     set((s) => {
       const msgs = s.autoReplyMessages.map((m) =>
-        m.id === id ? { ...m, ...changes, updatedAt: now() } : m
+        m.id === id ? { ...m, ...changes, updatedAt: now() } : m,
       );
       const updated = { ...s, autoReplyMessages: msgs };
       saveSettings(updated);
@@ -346,7 +424,10 @@ export const useStore = create<AppStore>((set, get) => ({
       updatedAt: now(),
     };
     set((s) => {
-      const updated = { ...s, automationProfiles: [...s.automationProfiles, newProfile] };
+      const updated = {
+        ...s,
+        automationProfiles: [...s.automationProfiles, newProfile],
+      };
       saveSettings(updated);
       return updated;
     });
@@ -355,7 +436,7 @@ export const useStore = create<AppStore>((set, get) => ({
   updateProfile(id, changes) {
     set((s) => {
       const profiles = s.automationProfiles.map((p) =>
-        p.id === id ? { ...p, ...changes, updatedAt: now() } : p
+        p.id === id ? { ...p, ...changes, updatedAt: now() } : p,
       );
       const updated = { ...s, automationProfiles: profiles };
       saveSettings(updated);

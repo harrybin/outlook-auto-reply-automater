@@ -14,6 +14,7 @@ import {
   Textarea,
   tokens,
 } from "@fluentui/react-components";
+import Editor, { type ContentEditableEvent } from "react-simple-wysiwyg";
 import {
   Add24Regular,
   Delete24Regular,
@@ -42,6 +43,19 @@ export function AutoReplyList() {
   });
 
   const [draft, setDraft] = useState(emptyDraft());
+
+  const hasBodyContent = (body: string, isHtml: boolean): boolean => {
+    if (!isHtml) {
+      return body.trim().length > 0;
+    }
+
+    const withoutTags = body
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .trim();
+
+    return withoutTags.length > 0;
+  };
 
   const openNew = () => {
     setDraft(emptyDraft());
@@ -155,14 +169,32 @@ export function AutoReplyList() {
                 />
               </Field>
               <Field label="Message Body" required>
-                <Textarea
-                  rows={6}
-                  value={draft.body}
-                  onChange={(_e, d) =>
-                    setDraft((p) => ({ ...p, body: d.value }))
-                  }
-                  placeholder="Enter your auto-reply message…"
-                />
+                {draft.isHtml ? (
+                  <Editor
+                    value={draft.body}
+                    onChange={(event: ContentEditableEvent) =>
+                      setDraft((p) => ({ ...p, body: event.target.value }))
+                    }
+                    placeholder="Enter your auto-reply message..."
+                    containerProps={{
+                      style: {
+                        minHeight: "240px",
+                        border: `1px solid ${tokens.colorNeutralStroke1}`,
+                        borderRadius: tokens.borderRadiusMedium,
+                        backgroundColor: tokens.colorNeutralBackground1,
+                      },
+                    }}
+                  />
+                ) : (
+                  <Textarea
+                    rows={6}
+                    value={draft.body}
+                    onChange={(_e, d) =>
+                      setDraft((p) => ({ ...p, body: d.value }))
+                    }
+                    placeholder="Enter your auto-reply message..."
+                  />
+                )}
               </Field>
               <Field label="HTML format">
                 <Switch
@@ -184,7 +216,7 @@ export function AutoReplyList() {
                 disabled={
                   !draft.name.trim() ||
                   !draft.subject.trim() ||
-                  !draft.body.trim()
+                  !hasBodyContent(draft.body, draft.isHtml)
                 }
               >
                 Save

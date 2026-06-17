@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import {
   Button,
   FluentProvider,
@@ -95,7 +96,9 @@ export function App() {
     setStatusMessage("Settings exported.");
   };
 
-  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = async (
+     event: ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -118,7 +121,11 @@ export function App() {
           <div className={classes.headerTopRow}>
             <Title3>Outlook Auto-Reply Automater</Title3>
             <div className={classes.headerActions}>
-              <Button appearance="secondary" size="small" onClick={handleExport}>
+              <Button
+                appearance="secondary"
+                size="small"
+                onClick={handleExport}
+              >
                 Export Settings
               </Button>
               <Button
@@ -141,7 +148,9 @@ export function App() {
             Manage reusable auto-reply messages and the rules that activate
             them.
           </p>
-          {statusMessage ? <p className={classes.status}>{statusMessage}</p> : null}
+          {statusMessage ? (
+            <p className={classes.status}>{statusMessage}</p>
+          ) : null}
         </header>
 
         <section className={classes.section}>
