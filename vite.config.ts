@@ -1,11 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import { resolve } from "path";
 import fs from "fs";
 import os from "os";
 import type { ServerOptions } from "https";
 
-// Load dev certificates created by office-addin-dev-certs (if available)
+// Load dev certificates created by office-addin-dev-certs (if available).
+// Returns the cert config when found so basicSsl plugin is not needed.
 function getHttpsConfig(): ServerOptions | undefined {
   const certPath = resolve(os.homedir(), ".office-addin-dev-certs");
   const keyFile = resolve(certPath, "localhost.key");
@@ -16,8 +18,12 @@ function getHttpsConfig(): ServerOptions | undefined {
   return undefined;
 }
 
+const httpsConfig = getHttpsConfig();
+
 export default defineConfig(() => ({
-  plugins: [react()],
+  // basicSsl provides a self-signed cert when office-addin-dev-certs are absent;
+  // Outlook add-ins require HTTPS so this ensures the dev server always uses it.
+  plugins: [react(), ...(httpsConfig ? [] : [basicSsl()])],
   base: process.env.VITE_BASE_PATH ?? "/",
   resolve: {
     alias: {
@@ -36,14 +42,15 @@ export default defineConfig(() => ({
   server: {
     port: 3000,
     strictPort: false,
-    https: getHttpsConfig(),
+    // basicSsl plugin sets https when httpsConfig is absent; otherwise use explicit certs.
+    https: httpsConfig,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
   },
   preview: {
     port: 3001,
-    https: getHttpsConfig(),
+    https: httpsConfig,
   },
   test: {
     globals: true,
