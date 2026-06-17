@@ -10,6 +10,7 @@ const deploymentDir = path.join(distDir, "deployment");
 const webDir = path.join(deploymentDir, "web");
 const manifestPath = path.join(repoRoot, "manifest.json");
 const iconsDir = path.join(repoRoot, "assets");
+const readmePath = path.join(repoRoot, "README.md");
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -26,6 +27,7 @@ async function main() {
 
   await copyBuildOutput();
   await copyIcons();
+  await copyReadme();
 
   const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
   const deployedManifest = rewriteLocalhostUrls(manifest, baseUrl);
@@ -139,6 +141,10 @@ async function copyIcons() {
   for (const iconName of ["icon-16.png", "icon-32.png", "icon-80.png", "icon-color.png", "icon-outline.png"]) {
     await fs.copyFile(path.join(iconsDir, iconName), path.join(targetAssetsDir, iconName));
   }
+}
+
+async function copyReadme() {
+  await fs.copyFile(readmePath, path.join(webDir, "README.md"));
 }
 
 async function copyEntry(sourcePath, targetPath) {
