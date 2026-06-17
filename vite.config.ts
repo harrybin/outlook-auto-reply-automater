@@ -16,7 +16,7 @@ function getHttpsConfig(): ServerOptions | undefined {
   return undefined;
 }
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(() => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -34,14 +34,15 @@ export default defineConfig(({ command }) => ({
   },
   server: {
     port: 3000,
-    https: command === "serve" ? getHttpsConfig() : undefined,
+    strictPort: false,
+    https: undefined,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
   },
   preview: {
-    port: 3000,
-    https: getHttpsConfig(),
+    port: 3001,
+    https: undefined,
   },
   test: {
     globals: true,

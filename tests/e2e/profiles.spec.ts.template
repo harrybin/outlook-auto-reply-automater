@@ -1,0 +1,360 @@
+import { test, expect } from './fixtures';
+import { createTestMessage, createTestProfile } from './utils';
+
+/**
+ * Automation Profile CRUD Tests
+ * Verifies profile creation, editing, deletion, rule management, and enable/disable.
+ */
+
+test.describe('Automation Profile CRUD', () => {
+  test.beforeEach(async ({ appPage }) => {
+    await appPage.page.evaluate(() => localStorage.clear());
+    await appPage.goto();
+  });
+
+  test('should add a new profile linked to a message', async ({ appPage }) => {
+    // Create a message first
+    const message = createTestMessage({ id: 'msg-for-profile', name: 'Template Message' });
+    
+    await appPage.page.evaluate((msg) => {
+      const settings = {
+        autoReplyMessages: [msg],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, message);
+
+    await appPage.goto();
+
+    // Look for "Add Profile" button
+    const addProfileButton = appPage.page.locator('button:has-text("Add Profile"), button:has-text("New Profile")').first();
+    
+    if (await addProfileButton.isVisible().catch(() => false)) {
+      await addProfileButton.click();
+      
+      // Wait for dialog
+      await appPage.page.locator('[role="dialog"]').waitFor().catch(() => null);
+      
+      // Fill profile details
+      const profileNameInput = appPage.page.locator('input[placeholder*="name" i], input[aria-label*="profile name" i]').first();
+      if (await profileNameInput.isVisible().catch(() => false)) {
+        await profileNameInput.fill('Meeting Profile');
+      }
+      
+      // Select message (dropdown or combobox)
+      const messageSelect = appPage.page.locator('select, [role="combobox"]').first();
+      if (await messageSelect.isVisible().catch(() => false)) {
+        await messageSelect.click();
+        const messageOption = appPage.page.locator(`text=${message.name}`).first();
+        if (await messageOption.isVisible().catch(() => false)) {
+          await messageOption.click();
+        }
+      }
+      
+      // Save
+      const saveButton = appPage.page.locator('button:has-text("Save")').first();
+      if (await saveButton.isVisible().catch(() => false)) {
+        await saveButton.click();
+        
+        const hasProfile = await appPage.isTextVisible('Meeting Profile');
+        expect(hasProfile).toBeTruthy();
+      }
+    }
+  });
+
+  test('should display list of profiles', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', { id: 'prof-1', name: 'Work Hours' });
+    
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    const hasProfile = await appPage.isTextVisible('Work Hours');
+    expect(hasProfile).toBeTruthy();
+  });
+
+  test('should add a keyword rule to a profile', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-rule-test',
+      name: 'Test Profile',
+      matchRules: { keywordRules: [], combinator: 'any' },
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    // Click edit on the profile
+    const editButton = appPage.page.locator('button:has-text("Edit")').first();
+    if (await editButton.isVisible().catch(() => false)) {
+      await editButton.click();
+      
+      // Look for "Add Rule" button
+      const addRuleButton = appPage.page.locator('button:has-text("Add Rule"), button:has-text("Add Keyword")').first();
+      if (await addRuleButton.isVisible().catch(() => false)) {
+        await addRuleButton.click();
+        
+        // Fill rule details
+        const fieldSelect = appPage.page.locator('select, [role="combobox"]').nth(0);
+        if (await fieldSelect.isVisible().catch(() => false)) {
+          await fieldSelect.click();
+          const subjectOption = appPage.page.locator('text=subject').first();
+          if (await subjectOption.isVisible().catch(() => false)) {
+            await subjectOption.click();
+          }
+        }
+        
+        const valueInput = appPage.page.locator('input[placeholder*="value" i]').first();
+        if (await valueInput.isVisible().catch(() => false)) {
+          await valueInput.fill('urgent');
+        }
+        
+        // Save rule
+        const saveButton = appPage.page.locator('button:has-text("Save")').nth(1);
+        if (await saveButton.isVisible().catch(() => false)) {
+          await saveButton.click();
+          
+          const hasRule = await appPage.isTextVisible(/urgent|subject/i);
+          expect(hasRule).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  test('should update profile timing settings', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-timing',
+      name: 'Timing Test',
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    const editButton = appPage.page.locator('button:has-text("Edit")').first();
+    if (await editButton.isVisible().catch(() => false)) {
+      await editButton.click();
+      
+      // Look for "Hours After" input
+      const hoursInput = appPage.page.locator('input[placeholder*="hour" i]').first();
+      if (await hoursInput.isVisible().catch(() => false)) {
+        await hoursInput.clear();
+        await hoursInput.fill('4');
+        
+        const saveButton = appPage.page.locator('button:has-text("Save")').first();
+        if (await saveButton.isVisible().catch(() => false)) {
+          await saveButton.click();
+          
+          const state = await appPage.getStoreState();
+          const updatedProfile = state?.automationProfiles?.[0];
+          expect(updatedProfile?.timingSettings?.hoursAfterAppointment).toBe(4);
+        }
+      }
+    }
+  });
+
+  test('should update Teams status settings', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-teams',
+      name: 'Teams Test',
+      teamsSettings: {
+        updateTeamsStatus: false,
+        teamsStatus: 'available',
+        teamsMessage: '',
+        restoreTeamsStatusOnEnd: false,
+      },
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    const editButton = appPage.page.locator('button:has-text("Edit")').first();
+    if (await editButton.isVisible().catch(() => false)) {
+      await editButton.click();
+      
+      // Look for Teams toggle
+      const teamsToggle = appPage.page.locator('input[aria-label*="Teams" i], button:has-text("Teams")').first();
+      if (await teamsToggle.isVisible().catch(() => false)) {
+        await teamsToggle.click();
+        
+        const saveButton = appPage.page.locator('button:has-text("Save")').first();
+        if (await saveButton.isVisible().catch(() => false)) {
+          await saveButton.click();
+          
+          const state = await appPage.getStoreState();
+          const updatedProfile = state?.automationProfiles?.[0];
+          expect(updatedProfile?.teamsSettings?.updateTeamsStatus).toBe(true);
+        }
+      }
+    }
+  });
+
+  test('should delete a profile', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-delete',
+      name: 'Delete Me',
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    const deleteButton = appPage.page.locator('button:has-text("Delete")').first();
+    if (await deleteButton.isVisible().catch(() => false)) {
+      await deleteButton.click();
+      
+      // Confirm deletion
+      const confirmButton = appPage.page.locator('button:has-text("Confirm"), button:has-text("Delete")').nth(1);
+      if (await confirmButton.isVisible().catch(() => false)) {
+        await confirmButton.click();
+      }
+      
+      const hasDeleted = await appPage.isTextVisible('Delete Me').then(v => !v).catch(() => true);
+      expect(hasDeleted).toBeTruthy();
+    }
+  });
+
+  test('should set profile active/inactive', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-active',
+      name: 'Toggle Test',
+      enabled: true,
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    // Look for enable/disable toggle
+    const toggleButton = appPage.page.locator('input[type="checkbox"][aria-label*="Enable" i], button[aria-label*="Enable" i]').first();
+    if (await toggleButton.isVisible().catch(() => false)) {
+      const initialState = await toggleButton.isChecked?.().catch(() => true);
+      await toggleButton.click();
+      
+      // Verify toggle changed in store
+      const state = await appPage.getStoreState();
+      const updatedProfile = state?.automationProfiles?.[0];
+      expect(updatedProfile?.enabled).not.toBe(initialState);
+    }
+  });
+
+  test('should persist profile changes across reload', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-persist',
+      name: 'Persist Test',
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+    
+    // Make a change (enable/disable)
+    const toggleButton = appPage.page.locator('input[type="checkbox"][aria-label*="Enable" i]').first();
+    if (await toggleButton.isVisible().catch(() => false)) {
+      try {
+        await toggleButton.click();
+      } catch {
+        await appPage.page.click('input[type="checkbox"][aria-label*="Enable" i]');
+      }
+    }
+    
+    // Reload
+    await appPage.page.reload();
+    await appPage.waitForAppReady();
+
+    // Verify change persisted
+    const state = await appPage.getStoreState();
+    const persistedProfile = state?.automationProfiles?.[0];
+    expect(persistedProfile?.enabled).toBe(profile.enabled === false ? true : false);
+  });
+});

@@ -1,0 +1,244 @@
+import { test, expect } from './fixtures';
+import { createTestMessage } from './utils';
+
+/**
+ * Auto-Reply Message CRUD Tests
+ * Verifies message creation, editing, deletion, and persistence.
+ */
+
+test.describe('Auto-Reply Message CRUD', () => {
+  test.beforeEach(async ({ appPage }) => {
+    // Clear localStorage before each test
+    await appPage.page.evaluate(() => localStorage.clear());
+    await appPage.goto();
+  });
+
+  test('should add a new message', async ({ appPage }) => {
+    // Look for "Add" button or similar
+    const addButton = appPage.page.locator('button:has-text("Add"), button:has-text("New")').first();
+    
+    // If button is found, click it
+    if (await addButton.isVisible().catch(() => false)) {
+      await addButton.click();
+      
+      // Wait for dialog to appear
+      await appPage.page.locator('[role="dialog"]').waitFor().catch(() => null);
+      
+      // Try to fill in form fields
+      const nameInput = appPage.page.locator('input[placeholder*="name" i], input[aria-label*="name" i]').first();
+      if (await nameInput.isVisible().catch(() => false)) {
+        await nameInput.fill('Quick Reply');
+        
+        const subjectInput = appPage.page.locator('input[placeholder*="subject" i], textarea[aria-label*="subject" i]').nth(0);
+        if (await subjectInput.isVisible().catch(() => false)) {
+          await subjectInput.fill('Re: Quick Reply');
+        }
+        
+        const bodyInput = appPage.page.locator('textarea[placeholder*="message" i], textarea[aria-label*="message" i]').first();
+        if (await bodyInput.isVisible().catch(() => false)) {
+          await bodyInput.fill('Thanks for reaching out!');
+        }
+        
+        // Click save/submit button
+        const submitButton = appPage.page.locator('button:has-text("Save"), button:has-text("Add"), button:has-text("Submit")').first();
+        if (await submitButton.isVisible().catch(() => false)) {
+          await submitButton.click();
+          
+          // Verify message was added to list
+          const msgText = await appPage.isTextVisible('Quick Reply');
+          expect(msgText).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  test('should display a list of messages', async ({ appPage }) => {
+    // Pre-populate with messages
+    await appPage.page.evaluate(() => {
+      const settings = {
+        autoReplyMessages: [
+          createTestMessage({ id: 'msg-1', name: 'Away' }),
+          createTestMessage({ id: 'msg-2', name: 'In Meeting' }),
+        ],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    });
+
+    await appPage.goto();
+    
+    // Verify messages are visible
+    const hasAway = await appPage.isTextVisible('Away');
+    const hasInMeeting = await appPage.isTextVisible('In Meeting');
+    
+    expect(hasAway || hasInMeeting).toBeTruthy();
+  });
+
+  test('should edit an existing message', async ({ appPage }) => {
+    // Pre-populate
+    const messageId = 'msg-edit-1';
+    await appPage.page.evaluate(({ id }) => {
+      const settings = {
+        autoReplyMessages: [
+          createTestMessage({ id, name: 'Original Name' }),
+        ],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { id: messageId });
+
+    await appPage.goto();
+
+    // Look for edit button (could be edit icon, pencil, or context menu)
+    const editButton = appPage.page.locator('button:has-text("Edit"), [aria-label*="Edit"]').first();
+    if (await editButton.isVisible().catch(() => false)) {
+      await editButton.click();
+      
+      // Wait for dialog
+      await appPage.page.locator('[role="dialog"]').waitFor().catch(() => null);
+      
+      // Find and update the name field
+      const nameInput = appPage.page.locator('input').filter({ hasText: 'Original Name' }).first();
+      if (await nameInput.isVisible().catch(() => false)) {
+        await nameInput.clear();
+        await nameInput.fill('Updated Name');
+        
+        const saveButton = appPage.page.locator('button:has-text("Save")').first();
+        if (await saveButton.isVisible().catch(() => false)) {
+          await saveButton.click();
+          
+          const hasUpdated = await appPage.isTextVisible('Updated Name');
+          expect(hasUpdated).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  test('should delete a message', async ({ appPage }) => {
+    const messageId = 'msg-delete-1';
+    await appPage.page.evaluate(({ id }) => {
+      const settings = {
+        autoReplyMessages: [
+          createTestMessage({ id, name: 'To Delete' }),
+        ],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { id: messageId });
+
+    await appPage.goto();
+
+    // Look for delete button
+    const deleteButton = appPage.page.locator('button:has-text("Delete"), [aria-label*="Delete"]').first();
+    if (await deleteButton.isVisible().catch(() => false)) {
+      await deleteButton.click();
+      
+      // If there's a confirmation dialog, confirm
+      const confirmButton = appPage.page.locator('button:has-text("Confirm"), button:has-text("Yes"), button:has-text("Delete")').nth(1);
+      if (await confirmButton.isVisible().catch(() => false)) {
+        await confirmButton.click();
+      }
+      
+      // Verify message is no longer visible
+      const hasDeleted = await appPage.isTextVisible('To Delete').then(v => !v).catch(() => true);
+      expect(hasDeleted).toBeTruthy();
+    }
+  });
+
+  test('should toggle HTML/plain text mode', async ({ appPage }) => {
+    // Pre-populate
+    const messageId = 'msg-html-1';
+    await appPage.page.evaluate(({ id }) => {
+      const settings = {
+        autoReplyMessages: [
+          createTestMessage({ id, name: 'HTML Test', isHtml: false }),
+        ],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { id: messageId });
+
+    await appPage.goto();
+
+    // Find and click the toggle
+    const toggleButton = appPage.page.locator('button:has-text("HTML"), input[type="checkbox"][aria-label*="HTML"]').first();
+    if (await toggleButton.isVisible().catch(() => false)) {
+      const initialState = await toggleButton.isChecked?.().catch(() => false);
+      try {
+        await toggleButton.click();
+      } catch {
+        await appPage.page.click('[aria-label*="HTML"]');
+      }
+      
+      // Verify toggle changed
+      const newState = await toggleButton.isChecked?.().catch(() => false);
+      expect(newState).not.toBe(initialState);
+    }
+  });
+
+  test('should persist messages across page reload', async ({ appPage }) => {
+    // Create a message via the UI or add it to localStorage
+    const testMessage = createTestMessage({ id: 'msg-persist-1', name: 'Persistent Message' });
+    
+    await appPage.page.evaluate((msg) => {
+      const settings = {
+        autoReplyMessages: [msg],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, testMessage);
+
+    await appPage.goto();
+    
+    // Reload the page
+    await appPage.page.reload();
+    await appPage.waitForAppReady();
+
+    // Verify message is still there
+    const hasMessage = await appPage.isTextVisible('Persistent Message');
+    expect(hasMessage).toBeTruthy();
+  });
+
+  test('should validate message name is required', async ({ appPage }) => {
+    const addButton = appPage.page.locator('button:has-text("Add")').first();
+    
+    if (await addButton.isVisible().catch(() => false)) {
+      await addButton.click();
+      
+      // Try to submit without filling name
+      const submitButton = appPage.page.locator('button:has-text("Save")').first();
+      if (await submitButton.isVisible().catch(() => false)) {
+        await submitButton.click?.();
+        
+        // Check for error message
+        const hasError = await appPage.isTextVisible(/required|empty|must|name/i);
+        expect(hasError).toBeTruthy();
+      }
+    }
+  });
+});

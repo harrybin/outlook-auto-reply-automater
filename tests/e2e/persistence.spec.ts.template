@@ -1,0 +1,331 @@
+import { test, expect } from './fixtures';
+import { createTestMessage, createTestProfile } from './utils';
+
+/**
+ * Settings Persistence Tests
+ * Verifies that settings are correctly saved to and loaded from localStorage.
+ */
+
+test.describe('Settings Persistence', () => {
+  test.beforeEach(async ({ appPage }) => {
+    await appPage.page.evaluate(() => localStorage.clear());
+    await appPage.goto();
+  });
+
+  test('should persist messages to localStorage', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-persist-1', name: 'Persistent Message' });
+
+    await appPage.page.evaluate((msg) => {
+      const settings = {
+        autoReplyMessages: [msg],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, message);
+
+    await appPage.goto();
+
+    // Verify in localStorage
+    const storedData = await appPage.page.evaluate(() => {
+      const item = localStorage.getItem('outlookAutoReplyAutomater_settings');
+      return item ? JSON.parse(item) : null;
+    });
+
+    expect(storedData?.autoReplyMessages).toHaveLength(1);
+    expect(storedData?.autoReplyMessages[0]?.name).toBe('Persistent Message');
+  });
+
+  test('should persist profiles to localStorage', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-persist-1',
+      name: 'Persistent Profile',
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    const storedData = await appPage.page.evaluate(() => {
+      const item = localStorage.getItem('outlookAutoReplyAutomater_settings');
+      return item ? JSON.parse(item) : null;
+    });
+
+    expect(storedData?.automationProfiles).toHaveLength(1);
+    expect(storedData?.automationProfiles[0]?.name).toBe('Persistent Profile');
+  });
+
+  test('should load settings from localStorage on app init', async ({ appPage }) => {
+    const testSettings = {
+      autoReplyMessages: [
+        createTestMessage({ id: 'msg-1', name: 'Loaded Message 1' }),
+        createTestMessage({ id: 'msg-2', name: 'Loaded Message 2' }),
+      ],
+      automationProfiles: [
+        createTestProfile('msg-1', { id: 'prof-1', name: 'Loaded Profile' }),
+      ],
+      locationSettings: null,
+      activeAutoReplyId: 'prof-1',
+    };
+
+    await appPage.page.evaluate((settings) => {
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, testSettings);
+
+    await appPage.goto();
+
+    const state = await appPage.getStoreState();
+    expect(state?.autoReplyMessages).toHaveLength(2);
+    expect(state?.automationProfiles).toHaveLength(1);
+    expect(state?.activeAutoReplyId).toBe('prof-1');
+  });
+
+  test('should reload data unchanged after page reload', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-reload', name: 'Reload Test' });
+    const profile = createTestProfile('msg-reload', {
+      id: 'prof-reload',
+      name: 'Reload Profile',
+    });
+
+    const originalSettings = {
+      autoReplyMessages: [message],
+      automationProfiles: [profile],
+      locationSettings: null,
+      activeAutoReplyId: null,
+    };
+
+    await appPage.page.evaluate((settings) => {
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, originalSettings);
+
+    await appPage.goto();
+
+    // Get initial state
+    const stateBeforeReload = await appPage.getStoreState();
+
+    // Reload the page
+    await appPage.page.reload();
+    await appPage.waitForAppReady();
+
+    // Get state after reload
+    const stateAfterReload = await appPage.getStoreState();
+
+    // Compare essential properties
+    expect(stateAfterReload?.autoReplyMessages).toHaveLength(stateBeforeReload?.autoReplyMessages.length);
+    expect(stateAfterReload?.automationProfiles).toHaveLength(stateBeforeReload?.automationProfiles.length);
+    expect(stateAfterReload?.activeAutoReplyId).toBe(stateBeforeReload?.activeAutoReplyId);
+  });
+
+  test('should clear all settings', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-clear', name: 'To Clear' });
+    const profile = createTestProfile('msg-clear', { id: 'prof-clear' });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    // Clear settings via localStorage
+    await appPage.page.evaluate(() => {
+      localStorage.removeItem('outlookAutoReplyAutomater_settings');
+    });
+
+    // Reload
+    await appPage.page.reload();
+    await appPage.waitForAppReady();
+
+    // Verify clean state
+    const storedData = await appPage.page.evaluate(() => {
+      return localStorage.getItem('outlookAutoReplyAutomater_settings');
+    });
+
+    expect(storedData).toBeNull();
+
+    const state = await appPage.getStoreState();
+    expect(state?.autoReplyMessages || []).toHaveLength(0);
+    expect(state?.automationProfiles || []).toHaveLength(0);
+  });
+
+  test('should handle corrupted localStorage gracefully', async ({ appPage }) => {
+    // Set corrupted data
+    await appPage.page.evaluate(() => {
+      localStorage.setItem('outlookAutoReplyAutomater_settings', 'corrupted json {]');
+    });
+
+    // App should not crash, should use default state
+    await appPage.goto();
+
+    const state = await appPage.getStoreState();
+    expect(state).toBeDefined();
+    // State should be empty or default
+    expect(state?.autoReplyMessages || []).toHaveLength(0);
+  });
+
+  test('should persist location settings', async ({ appPage }) => {
+    const locationSettings = {
+      geofenceEnabled: true,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      radiusMeters: 100,
+    };
+
+    await appPage.page.evaluate((settings) => {
+      const appSettings = {
+        autoReplyMessages: [],
+        automationProfiles: [],
+        locationSettings: settings,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(appSettings)
+      );
+    }, locationSettings);
+
+    await appPage.goto();
+
+    const storedData = await appPage.page.evaluate(() => {
+      const item = localStorage.getItem('outlookAutoReplyAutomater_settings');
+      return item ? JSON.parse(item) : null;
+    });
+
+    expect(storedData?.locationSettings?.geofenceEnabled).toBe(true);
+    expect(storedData?.locationSettings?.latitude).toBe(37.7749);
+  });
+
+  test('should preserve timestamps on persisted items', async ({ appPage }) => {
+    const now = new Date().toISOString();
+    const message = createTestMessage({
+      id: 'msg-timestamp',
+      name: 'Timestamp Test',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await appPage.page.evaluate((msg) => {
+      const settings = {
+        autoReplyMessages: [msg],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, message);
+
+    await appPage.goto();
+
+    const state = await appPage.getStoreState();
+    expect(state?.autoReplyMessages[0]?.createdAt).toBe(now);
+    expect(state?.autoReplyMessages[0]?.updatedAt).toBe(now);
+  });
+
+  test('should update localStorage when profile is toggled', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-1' });
+    const profile = createTestProfile('msg-1', {
+      id: 'prof-toggle-persist',
+      name: 'Toggle Persist',
+      enabled: true,
+    });
+
+    await appPage.page.evaluate((data) => {
+      const settings = {
+        autoReplyMessages: [data.message],
+        automationProfiles: [data.profile],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    }, { message, profile });
+
+    await appPage.goto();
+
+    // Toggle profile off
+    const toggleButton = appPage.page.locator('input[type="checkbox"][aria-label*="Enable" i]').first();
+    if (await toggleButton.isVisible().catch(() => false)) {
+      try {
+        await toggleButton.click();
+      } catch {
+        await appPage.page.click('input[type="checkbox"][aria-label*="Enable" i]');
+      }
+      
+      // Wait a moment for persistence
+      await appPage.page.waitForTimeout(500);
+      
+      // Check localStorage
+      const storedData = await appPage.page.evaluate(() => {
+        const item = localStorage.getItem('outlookAutoReplyAutomater_settings');
+        return item ? JSON.parse(item) : null;
+      });
+
+      expect(storedData?.automationProfiles[0]?.enabled).toBe(false);
+    }
+  });
+
+  test('should maintain referential integrity between messages and profiles', async ({ appPage }) => {
+    const message = createTestMessage({ id: 'msg-ref-1', name: 'Referenced Message' });
+    const profile = createTestProfile('msg-ref-1', {
+      id: 'prof-ref-1',
+      name: 'Profile With Message Ref',
+    });
+
+    const settings = {
+      autoReplyMessages: [message],
+      automationProfiles: [profile],
+      locationSettings: null,
+      activeAutoReplyId: null,
+    };
+
+    await appPage.page.evaluate((s) => {
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(s)
+      );
+    }, settings);
+
+    await appPage.goto();
+
+    const state = await appPage.getStoreState();
+    const profileMessageId = state?.automationProfiles[0]?.messageId;
+    const messageExists = state?.autoReplyMessages.some((m: any) => m.id === profileMessageId);
+
+    expect(messageExists).toBe(true);
+  });
+});

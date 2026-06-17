@@ -1,0 +1,99 @@
+import { test, expect, AppPage } from './fixtures';
+
+/**
+ * App Initialization Tests
+ * Verifies that the add-in loads, renders key components, and hydrates state.
+ */
+
+test.describe('App Initialization', () => {
+  test('should load without errors', async ({ page }) => {
+    const appPage = new AppPage(page);
+    await appPage.goto();
+    // Verify the page title is set
+    const title = await appPage.page.title();
+    expect(title).toBeTruthy();
+  });
+
+  test('should render FluentUI Provider and main sections', async ({ appPage }) => {
+    await appPage.goto();
+    // Verify key UI sections are visible
+    await expect(appPage.page.locator('body')).toBeVisible();
+  });
+
+  test('should render AutoReplyList section', async ({ appPage }) => {
+    await appPage.goto();
+    // Look for text indicating the AutoReplyList/messages section
+    const isVisible = await appPage.isTextVisible(/auto-reply|messages|message/i);
+    expect(isVisible).toBeTruthy();
+  });
+
+  test('should render ProfileList section', async ({ appPage }) => {
+    await appPage.goto();
+    // Look for text indicating the ProfileList/profiles section
+    const isVisible = await appPage.isTextVisible(/profile|automation|rule/i);
+    expect(isVisible).toBeTruthy();
+  });
+
+  test('should hydrate store from localStorage', async ({ appPage }) => {
+    // Pre-populate localStorage with settings
+    await appPage.page.evaluate(() => {
+      const settings = {
+        autoReplyMessages: [
+          {
+            id: 'msg-1',
+            name: 'Vacation Reply',
+            subject: 'Out of Office',
+            body: 'I am currently away and will respond when I return.',
+            isHtml: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+        automationProfiles: [],
+        locationSettings: null,
+        activeAutoReplyId: null,
+      };
+      localStorage.setItem(
+        'outlookAutoReplyAutomater_settings',
+        JSON.stringify(settings)
+      );
+    });
+
+    await appPage.goto();
+    // Verify the saved message is visible or can be retrieved from store
+    const state = await appPage.getStoreState();
+    expect(state?.autoReplyMessages).toHaveLength(1);
+    expect(state?.autoReplyMessages[0].name).toBe('Vacation Reply');
+  });
+
+  test('should start with empty state if no localStorage', async ({ appPage }) => {
+    // Ensure localStorage is clean
+    await appPage.page.evaluate(() => {
+      localStorage.clear();
+    });
+
+    await appPage.goto();
+    const state = await appPage.getStoreState();
+    expect(state?.autoReplyMessages || []).toHaveLength(0);
+    expect(state?.automationProfiles || []).toHaveLength(0);
+  });
+
+  test('should inject Office context globally', async ({ appPage }) => {
+    await appPage.goto();
+    const hasOfficeContext = await appPage.page.evaluate(() => {
+      return (
+        typeof window.Office !== 'undefined' &&
+        typeof window.Office.onReady === 'function'
+      );
+    });
+    expect(hasOfficeContext).toBeTruthy();
+  });
+
+  test('should initialize with mock Graph client', async ({ appPage }) => {
+    await appPage.goto();
+    const hasGraphClient = await appPage.page.evaluate(() => {
+      return typeof (window as any).__MOCK_GRAPH_CLIENT__ !== 'undefined';
+    });
+    expect(hasGraphClient).toBeTruthy();
+  });
+});

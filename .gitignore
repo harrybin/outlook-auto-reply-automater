@@ -1,2 +1,4 @@
 node_modules/
 dist/
+tests/e2e/smoke.spec.ts.bak
+dev-server.log
