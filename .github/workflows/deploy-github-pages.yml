@@ -32,9 +32,10 @@ jobs:
 
             - name: Verify lockfile is up to date
               run: |
+                  BEFORE=$(jq 'del(.version, .packages[""].version)' package-lock.json)
                   npm install --package-lock-only
-                  STALE=$(git diff -U0 package-lock.json | grep '^[+-][^+-]' | grep -v '"version"')
-                  if [ -n "$STALE" ]; then
+                  AFTER=$(jq 'del(.version, .packages[""].version)' package-lock.json)
+                  if [ "$BEFORE" != "$AFTER" ]; then
                     echo "::error::package-lock.json is stale. Run 'npm install' locally and commit the updated lockfile."
                     exit 1
                   fi
