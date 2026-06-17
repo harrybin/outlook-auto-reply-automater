@@ -18,7 +18,7 @@ async function setupAppPage(page: Page) {
     };
   });
 
-  await page.goto("/");
+  await page.goto("/src/taskpane/index.html");
   await page.waitForLoadState("domcontentloaded");
 }
 
@@ -37,7 +37,7 @@ test("Office context is mocked", async ({ page }) => {
 });
 
 test("localStorage is available", async ({ page }) => {
-  await page.goto("about:blank");
+  await setupAppPage(page);
   const hasStorage = await page.evaluate(
     () => typeof localStorage !== "undefined",
   );

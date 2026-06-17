@@ -22,14 +22,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: process.env.CI
-    ? {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: false,
-        timeout: 300_000,
-      }
-    : undefined,
+  webServer: {
+    command: "npx vite --strictPort --port 3000",
+    url: "http://localhost:3000/src/taskpane/index.html",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+  },
 
   projects: [
     {

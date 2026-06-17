@@ -88,7 +88,7 @@
               "groups": [
                 {
                   "id": "AutoReplyGroup",
-                  "label": "Auto-Reply Automater",
+                  "label": "Auto-Reply",
                   "icons": [
                     {
                       "size": 16,
@@ -107,7 +107,7 @@
                     {
                       "id": "OpenAutoReplyPane",
                       "type": "button",
-                      "label": "Manage Auto-Reply",
+                      "label": "Open Auto-Reply",
                       "icons": [
                         {
                           "size": 16,
@@ -123,8 +123,8 @@
                         }
                       ],
                       "supertip": {
-                        "title": "Auto-Reply Automater",
-                        "description": "Open the Auto-Reply Automater task pane to manage automatic out-of-office messages."
+                        "title": "Open Auto-Reply",
+                        "description": "Open the Auto-Reply task pane to manage automatic out-of-office messages."
                       },
                       "actionId": "OpenTaskPane"
                     }

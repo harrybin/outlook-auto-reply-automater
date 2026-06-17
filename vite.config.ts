@@ -34,7 +34,7 @@ export default defineConfig(() => ({
   },
   server: {
     port: 3000,
-    strictPort: false,
+    strictPort: true,
     https: undefined,
     headers: {
       "Access-Control-Allow-Origin": "*",

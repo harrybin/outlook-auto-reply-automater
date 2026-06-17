@@ -62,7 +62,7 @@ After sideloading, use this flow to configure and run automation:
 - **Classic Outlook (Windows desktop)**
     - Open any email item.
     - In the ribbon, open the **Auto-Reply** tab.
-    - In the **Auto-Reply Automater** group, click **Manage Auto-Reply**.
+    - In the **Auto-Reply** group, click **Open Auto-Reply**.
 
 ### Where Configuration Lives
 
