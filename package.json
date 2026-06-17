@@ -1,13 +1,13 @@
 {
   "name": "outlook-auto-reply-automater",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "An Outlook add-in that automatically manages auto-reply messages based on calendar appointments, location, and Teams status.",
   "private": true,
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/bump-version.mjs",
     "build": "tsc && vite build",
-    "build:local": "npm run build && office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3002",
+    "build:local": "npm run build && office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",
     "preview": "vite preview --https",
     "lint": "eslint src tests --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src tests --ext .ts,.tsx --fix",
@@ -22,11 +22,12 @@
     "version:bump": "node scripts/bump-version.mjs",
     "version:bump:minor": "node scripts/bump-version.mjs --minor",
     "version:bump:major": "node scripts/bump-version.mjs --major",
-    "start": "office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3002",
+    "start": "office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",
     "stop": "office-addin-debugging stop manifest.json",
     "validate": "office-addin-manifest validate manifest.json",
     "publish": "office-addin publish",
-    "pack": "office-addin-manifest export --manifest manifest.json --output dist/manifest.json"
+    "pack": "node scripts/create-deployment-bundle.mjs",
+    "pack:manifest": "office-addin-manifest export --manifest manifest.json --output dist/manifest.json"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.13.0",

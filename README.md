@@ -46,7 +46,7 @@ To load the add-in into Outlook for local development:
 npm run start
 ```
 
-This validates the manifest and launches Outlook with the add-in sideloaded.
+This validates the manifest and launches Outlook with the add-in sideloaded against `https://localhost:3000`.
 
 ## How to Use the Extension
 
@@ -119,9 +119,33 @@ After sideloading, use this flow to configure and run automation:
 | `npm run test:coverage` | Run tests with coverage report |
 | `npm run type-check` | Run TypeScript type checking without emitting |
 | `npm run validate` | Validate the Office add-in manifest |
+| `npm run pack -- https://your-host.example.com/app` | Create a Windows/Mac deployment bundle in `dist/deployment` |
+| `npm run pack:manifest` | Export the raw manifest without building a deployment bundle |
 | `npm run version:bump` | Bump the patch version |
 | `npm run version:bump:minor` | Bump the minor version |
 | `npm run version:bump:major` | Bump the major version |
+
+## Deployment
+
+For Outlook on Windows and Mac, deployment requires two pieces:
+
+- A hosted HTTPS web app for the add-in UI
+- A manifest that points to that hosted URL
+
+Create a deployment bundle with:
+
+```bash
+npm run build
+npm run pack -- https://your-host.example.com/outlook-auto-reply-automater
+```
+
+This writes a ready-to-deploy bundle to `dist/deployment`:
+
+- `dist/deployment/web/` contains the static web assets you must host over HTTPS
+- `dist/deployment/manifest.json` contains production URLs for Outlook deployment on Windows and Mac
+- `dist/deployment/DEPLOY.md` contains the deployment steps
+
+After hosting `dist/deployment/web/`, sideload or deploy `dist/deployment/manifest.json` into Outlook.
 
 ## Project Structure
 

@@ -55,7 +55,7 @@
             "name": "Open Taskpane in Browser",
             "type": "msedge",
             "request": "launch",
-            "url": "https://localhost:3002/src/taskpane/index.html",
+            "url": "https://localhost:3000/src/taskpane/index.html",
             "webRoot": "${workspaceFolder}/src",
             "sourceMapPathOverrides": {
                 "/src/*": "${webRoot}/*"

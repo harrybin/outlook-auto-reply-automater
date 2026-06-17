@@ -161,15 +161,21 @@
       }
     },
     // ──────────────────────────────────────────────────────────────────────────
-    // Create Installer
-    // Builds the project and creates a distributable add-in package (.zip).
+    // Create Deployment Bundle
+    // Builds the project and creates a production deployment bundle for
+    // Outlook on Windows and Mac using the HTTPS base URL you provide.
     // ──────────────────────────────────────────────────────────────────────────
     {
-      "label": "Create Installer",
+      "label": "Create Deployment Bundle",
       "type": "shell",
       "command": "npm run pack",
       "group": "none",
       "dependsOn": "Build",
+      "options": {
+        "env": {
+          "DEPLOY_BASE_URL": "${input:deployBaseUrl}"
+        }
+      },
       "problemMatcher": [],
       "presentation": {
         "echo": true,
@@ -181,9 +187,9 @@
       }
     },
     // ──────────────────────────────────────────────────────────────────────────
-    // Pack (create installable package)
-    // Bundles the built add-in into a .zip package ready for manual
-    // distribution or AppSource submission.
+    // Pack (build Win/Mac deployment bundle)
+    // Copies the built web assets, includes the add-in icons, and writes
+    // a production manifest ready for hosting and Outlook deployment.
     // ──────────────────────────────────────────────────────────────────────────
     {
       "label": "Pack",
@@ -191,6 +197,11 @@
       "command": "npm run pack",
       "group": "none",
       "dependsOn": "Build",
+      "options": {
+        "env": {
+          "DEPLOY_BASE_URL": "${input:deployBaseUrl}"
+        }
+      },
       "problemMatcher": [],
       "presentation": {
         "echo": true,
@@ -279,6 +290,14 @@
         "showReuseMessage": false,
         "clear": false
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "deployBaseUrl",
+      "type": "promptString",
+      "description": "HTTPS base URL where the built add-in files will be hosted for Outlook on Windows and Mac",
+      "default": "https://your-host.example.com/outlook-auto-reply-automater"
     }
   ]
 }
