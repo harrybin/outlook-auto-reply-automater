@@ -61,10 +61,14 @@ writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 
 // Keep package-lock.json in sync with package.json version changes.
 const npmExecutable = process.platform === "win32" ? "npm.cmd" : "npm";
-const lockUpdate = spawnSync(npmExecutable, ["install", "--package-lock-only"], {
-  cwd: root,
-  stdio: "inherit",
-});
+const lockUpdate = spawnSync(
+  npmExecutable,
+  ["install", "--package-lock-only"],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
 
 if (lockUpdate.status !== 0) {
   console.error("✖ Failed to update package-lock.json after version bump.");
