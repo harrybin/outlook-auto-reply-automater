@@ -33,6 +33,10 @@ import type {
 } from "../types";
 import { useStore } from "../useStore";
 import { nanoid } from "../utils/nanoid";
+import { getAccount, getGraphClient, signIn } from "../services/authService";
+import { clearTeamsPresence, setTeamsPresence } from "../services/teamsService";
+
+const TEAMS_STATUS_TEST_DURATION_MS = 3000;
 
 const BUSY_STATUSES: AppointmentBusyStatus[] = [
   "free",
@@ -168,14 +172,17 @@ export function ProfileList() {
 
   const [editing, setEditing] = useState<AutomationProfile | null>(null);
   const [draggedProfileId, setDraggedProfileId] = useState<string | null>(null);
-  const [dragOverProfileId, setDragOverProfileId] = useState<string | null>(
-    null,
-  );
   const [isNew, setIsNew] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(defaultProfile());
   const [canCreateOutlookMessage, setCanCreateOutlookMessage] = useState(() =>
     canCreateOutlookMessageForRule(),
   );
+  const [teamsStatusTestState, setTeamsStatusTestState] = useState<
+    "idle" | "testing" | "error"
+  >("idle");
+  const [teamsStatusTestError, setTeamsStatusTestError] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (typeof Office === "undefined") {
@@ -207,6 +214,8 @@ export function ProfileList() {
     setDraft(defaultProfile());
     setIsNew(true);
     setEditing(null);
+    setTeamsStatusTestState("idle");
+    setTeamsStatusTestError(null);
   };
   const openEdit = (p: AutomationProfile) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -214,6 +223,8 @@ export function ProfileList() {
     setDraft(rest);
     setEditing(p);
     setIsNew(false);
+    setTeamsStatusTestState("idle");
+    setTeamsStatusTestError(null);
   };
 
   const handleSave = () => {
@@ -221,6 +232,40 @@ export function ProfileList() {
     else if (editing) updateProfile(editing.id, draft);
     setEditing(null);
     setIsNew(false);
+  };
+
+  const handleTestTeamsStatus = async () => {
+    setTeamsStatusTestError(null);
+    setTeamsStatusTestState("testing");
+    try {
+      const account = await getAccount();
+      if (!account) {
+        await signIn();
+      }
+      const graphClient = getGraphClient();
+      await setTeamsPresence(
+        graphClient,
+        draft.teamsStatusSettings.statusWhenActive,
+        draft.teamsStatusSettings.statusMessageWhenActive,
+      );
+      setTimeout(() => {
+        void clearTeamsPresence(getGraphClient())
+          .catch((err) => {
+            setTeamsStatusTestState("error");
+            setTeamsStatusTestError(
+              err instanceof Error ? err.message : String(err),
+            );
+          })
+          .then(() => {
+            setTeamsStatusTestState((prev) =>
+              prev === "error" ? prev : "idle",
+            );
+          });
+      }, TEAMS_STATUS_TEST_DURATION_MS);
+    } catch (err) {
+      setTeamsStatusTestState("error");
+      setTeamsStatusTestError(err instanceof Error ? err.message : String(err));
+    }
   };
 
   const addKeyword = () => {
@@ -312,7 +357,6 @@ export function ProfileList() {
         const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
         const canCreateMessage = hasMessage && canCreateOutlookMessage;
         const isDragging = draggedProfileId === p.id;
-        const isDropTarget = dragOverProfileId === p.id;
 
         return (
           <motion.div
@@ -326,59 +370,35 @@ export function ProfileList() {
             }}
             onDragEndCapture={() => {
               setDraggedProfileId(null);
-              setDragOverProfileId(null);
+            }}
+            onDragEnterCapture={() => {
+              if (draggedProfileId && draggedProfileId !== p.id) {
+                reorderProfiles(draggedProfileId, p.id);
+              }
             }}
             onDragOverCapture={(event) => {
               event.preventDefault();
-              if (draggedProfileId && draggedProfileId !== p.id) {
-                setDragOverProfileId(p.id);
-              }
               event.dataTransfer.dropEffect = "move";
             }}
             onDropCapture={(event) => {
               event.preventDefault();
-              if (!draggedProfileId || draggedProfileId === p.id) {
-                return;
-              }
-              reorderProfiles(draggedProfileId, p.id);
               setDraggedProfileId(null);
-              setDragOverProfileId(null);
             }}
-            whileHover={
-              isDragging
-                ? undefined
-                : { x: 6, y: -4, scale: 1.02, rotate: -0.2 }
-            }
-            animate={
-              isDropTarget
-                ? {
-                    y: -6,
-                    scale: 1.025,
-                    boxShadow: "0 18px 28px rgba(0,0,0,0.28)",
-                    borderColor: tokens.colorBrandStroke1,
-                  }
-                : { y: 0, scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)" }
-            }
             transition={{
               type: "spring",
               stiffness: 260,
-              damping: 18,
+              damping: 22,
               mass: 0.8,
             }}
             style={{
-              border: `1px solid ${
-                isDropTarget
-                  ? tokens.colorBrandStroke1
-                  : tokens.colorNeutralStroke2
-              }`,
+              border: `1px solid ${tokens.colorNeutralStroke2}`,
               borderRadius: tokens.borderRadiusMedium,
               padding: tokens.spacingVerticalS,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               cursor: "grab",
-              opacity: isDragging ? 0.75 : 1,
-              boxShadow: isDropTarget ? "0 18px 28px rgba(0,0,0,0.28)" : "none",
+              opacity: isDragging ? 0.5 : 1,
             }}
           >
             <div
@@ -435,13 +455,14 @@ export function ProfileList() {
                 onClick={() => createMessageForRule(p)}
                 disabled={!canCreateMessage}
               >
-                Create Message
+                Preview
               </Button>
               <Button
                 icon={<Edit24Regular />}
-                appearance="subtle"
+                appearance="primary"
                 size="small"
                 onClick={() => openEdit(p)}
+                style={{ minWidth: "56px" }}
               />
               <Button
                 icon={<Delete24Regular />}
@@ -861,19 +882,61 @@ export function ProfileList() {
                     gap: tokens.spacingVerticalS,
                   }}
                 >
-                  <Switch
-                    checked={draft.teamsStatusSettings.enabled}
-                    onChange={(_e, d) =>
-                      setDraft((p) => ({
-                        ...p,
-                        teamsStatusSettings: {
-                          ...p.teamsStatusSettings,
-                          enabled: d.checked,
-                        },
-                      }))
-                    }
-                    label="Set Teams status when active"
-                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: tokens.spacingHorizontalS,
+                    }}
+                  >
+                    <Switch
+                      checked={draft.teamsStatusSettings.enabled}
+                      onChange={(_e, d) =>
+                        setDraft((p) => ({
+                          ...p,
+                          teamsStatusSettings: {
+                            ...p.teamsStatusSettings,
+                            enabled: d.checked,
+                          },
+                        }))
+                      }
+                      label="Set Teams status when active"
+                    />
+                    {draft.teamsStatusSettings.enabled && (
+                      <Button
+                        appearance="primary"
+                        size="small"
+                        onClick={() => void handleTestTeamsStatus()}
+                        disabled={teamsStatusTestState === "testing"}
+                      >
+                        {teamsStatusTestState === "testing"
+                          ? "Testing…"
+                          : "Test Teams status"}
+                      </Button>
+                    )}
+                    {teamsStatusTestState === "testing" && (
+                      <span
+                        style={{
+                          fontSize: tokens.fontSizeBase200,
+                          color: tokens.colorNeutralForeground3,
+                        }}
+                      >
+                        Status set to {draft.teamsStatusSettings.statusWhenActive}
+                        {" – reverting in 3 seconds…"}
+                      </span>
+                    )}
+                    {teamsStatusTestState === "error" && (
+                      <span
+                        style={{
+                          fontSize: tokens.fontSizeBase200,
+                          color: tokens.colorPaletteRedForeground1,
+                        }}
+                      >
+                        Test failed: {teamsStatusTestError}
+                      </span>
+                    )}
+                  </div>
                   {draft.teamsStatusSettings.enabled && (
                     <>
                       <Field label="Teams status">
