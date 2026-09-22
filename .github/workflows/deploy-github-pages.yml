@@ -103,6 +103,9 @@ jobs:
               id: version
               run: echo "value=v$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
 
+            - name: Prepare release asset
+              run: cp dist/deployment/manifest.json manifest.json
+
             - name: Write release notes
               run: |
                   cat <<'EOF' > release-notes.md
@@ -134,9 +137,9 @@ jobs:
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
-                    gh release upload "$RELEASE_TAG" dist/deployment/manifest.json --clobber
+                    gh release upload "$RELEASE_TAG" manifest.json --clobber
                   else
-                    gh release create "$RELEASE_TAG" dist/deployment/manifest.json \
+                    gh release create "$RELEASE_TAG" manifest.json \
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
