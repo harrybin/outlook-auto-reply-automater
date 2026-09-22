@@ -178,7 +178,6 @@ export function App() {
 
       Office.context?.mailbox?.removeHandlerAsync(
         Office.EventType.OfficeThemeChanged,
-        onOfficeThemeChanged,
       );
     };
   }, []);
