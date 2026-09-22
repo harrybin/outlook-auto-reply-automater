@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -14,7 +14,9 @@
 
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
         font-size: 16px;
         line-height: 1.6;
         background: #f6f8fa;
@@ -138,17 +140,54 @@
         color: #664d03;
         font-size: 0.95rem;
       }
-      #content h1 { font-size: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
-      #content h2 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 1.5em; }
-      #content h3 { font-size: 1.25em; margin-top: 1.25em; }
-      #content a { color: #0969da; text-decoration: none; }
-      #content a:hover { text-decoration: underline; }
+
+      .reference-callout {
+        background: #e8f3fc;
+        border: 1px solid #0969da;
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .reference-callout h2 {
+        margin: 0 0 0.5rem;
+        color: #0757a0;
+        font-size: 1.05rem;
+      }
+
+      .reference-callout p {
+        margin: 0;
+        color: #24292f;
+      }
+      #content h1 {
+        font-size: 2em;
+        border-bottom: 1px solid #d0d7de;
+        padding-bottom: 0.3em;
+      }
+      #content h2 {
+        font-size: 1.5em;
+        border-bottom: 1px solid #d0d7de;
+        padding-bottom: 0.3em;
+        margin-top: 1.5em;
+      }
+      #content h3 {
+        font-size: 1.25em;
+        margin-top: 1.25em;
+      }
+      #content a {
+        color: #0969da;
+        text-decoration: none;
+      }
+      #content a:hover {
+        text-decoration: underline;
+      }
       #content code {
         background: #afb8c133;
         border-radius: 3px;
         font-size: 85%;
         padding: 0.2em 0.4em;
-        font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
       }
       #content pre {
         background: #f6f8fa;
@@ -174,8 +213,13 @@
         padding: 0.5em 0.75em;
         text-align: left;
       }
-      #content th { background: #f6f8fa; font-weight: 600; }
-      #content tr:nth-child(even) td { background: #f6f8fa; }
+      #content th {
+        background: #f6f8fa;
+        font-weight: 600;
+      }
+      #content tr:nth-child(even) td {
+        background: #f6f8fa;
+      }
       #content blockquote {
         border-left: 4px solid #d0d7de;
         color: #57606a;
@@ -183,28 +227,58 @@
         padding: 0 1em;
       }
       #content ul,
-      #content ol { padding-left: 2em; }
-      #content img { max-width: 100%; border-radius: 4px; }
-      #content hr { border: none; border-top: 1px solid #d0d7de; }
+      #content ol {
+        padding-left: 2em;
+      }
+      #content img {
+        max-width: 100%;
+        border-radius: 4px;
+      }
+      #content hr {
+        border: none;
+        border-top: 1px solid #d0d7de;
+      }
     </style>
   </head>
   <body>
     <header>
       <div class="header-left">
-        <img src="assets/icon-80.png" alt="Add-in icon" onerror="this.style.display='none'" />
+        <img
+          src="assets/icon-80.png"
+          alt="Add-in icon"
+          onerror="this.style.display = 'none'"
+        />
         <h1>Outlook Auto-Reply Automater</h1>
       </div>
-      <a class="download-btn" href="manifest.json" download="manifest.json">⬇️ Download manifest.json</a>
+      <a class="download-btn" href="manifest.json" download="manifest.json"
+        >⬇️ Download manifest.json</a
+      >
       <a class="demo-btn" href="src/demo/index.html">▶ Try Interactive Demo</a>
     </header>
     <main>
       <div class="demo-callout">
         <p>
-          <strong>🚀 Try it live!</strong> Explore the full add-in interface right in your browser –
-          no Microsoft 365 account or Outlook installation needed.
+          <strong>🚀 Try it live!</strong> Explore the full add-in interface
+          right in your browser – no Microsoft 365 account or Outlook
+          installation needed.
         </p>
-        <a class="demo-btn" href="src/demo/index.html">▶ Open Interactive Demo</a>
+        <a class="demo-btn" href="src/demo/index.html"
+          >▶ Open Interactive Demo</a
+        >
       </div>
+      <section
+        class="reference-callout"
+        aria-labelledby="template-rule-reference"
+      >
+        <h2 id="template-rule-reference">Message templates and rules</h2>
+        <p>
+          Messages support appointment placeholders such as
+          <code>{{appointment.title}}</code>, <code>{{appointment.end}}</code>,
+          <code>{{appointment.nextWorkingDayAfterEnd}}</code>, and
+          <code>{{rule.match}}</code> for regex matches. The full placeholder
+          and rule reference is included in the documentation below.
+        </p>
+      </section>
       <div id="error">Could not load README.md.</div>
       <div id="content"><p id="loading">Loading documentation…</p></div>
     </main>

@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   FluentProvider,
   type Theme,
   Title3,
@@ -10,7 +16,9 @@ import {
   tokens,
   webDarkTheme,
   webLightTheme,
+  Tooltip,
 } from "@fluentui/react-components";
+import { Info24Regular } from "@fluentui/react-icons";
 import { AutoReplyList } from "./components/AutoReplyList";
 import { ProfileList } from "./components/ProfileList";
 import { useStore } from "./useStore";
@@ -124,9 +132,19 @@ export function App() {
   const loadFromStorage = useStore((state) => state.loadFromStorage);
   const exportSettings = useStore((state) => state.exportSettings);
   const importSettings = useStore((state) => state.importSettings);
+  const profiles = useStore((state) => state.automationProfiles);
+  const hasHandledDefaultRulesPrompt = useStore(
+    (state) => state.hasHandledDefaultRulesPrompt,
+  );
+  const handleDefaultRulesPrompt = useStore(
+    (state) => state.handleDefaultRulesPrompt,
+  );
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const showDefaultRulesPrompt =
+    !hasHandledDefaultRulesPrompt && profiles.length === 0;
 
   useEffect(() => {
     loadFromStorage();
@@ -215,11 +233,44 @@ export function App() {
 
   return (
     <FluentProvider theme={theme} className={classes.page}>
+      <Dialog open={showDefaultRulesPrompt} modalType="modal">
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Standardregeln erstellen?</DialogTitle>
+            <DialogContent>
+              Möchten Sie Nachrichten und Regeln für Reise, Training ab vier
+              Stunden und Termine außer Haus beim Kunden erstellen?
+            </DialogContent>
+            <DialogActions>
+              <Button
+                appearance="secondary"
+                onClick={() => handleDefaultRulesPrompt(false)}
+              >
+                Nein, selbst erstellen
+              </Button>
+              <Button
+                appearance="primary"
+                onClick={() => handleDefaultRulesPrompt(true)}
+              >
+                Standardregeln erstellen
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
       <main className={classes.shell}>
         <header className={classes.header}>
           <div className={classes.headerTopRow}>
             <Title3>Outlook Auto-Reply Automater</Title3>
             <div className={classes.headerActions}>
+              <Tooltip content="Hilfe zu Platzhaltern und Regeln" relationship="label">
+                <Button
+                  appearance="subtle"
+                  icon={<Info24Regular />}
+                  aria-label="Hilfe zu Platzhaltern und Regeln"
+                  onClick={() => setIsHelpOpen(true)}
+                />
+              </Tooltip>
               <Button
                 appearance="secondary"
                 size="small"
@@ -260,6 +311,51 @@ export function App() {
           <ProfileList />
         </section>
       </main>
+      <Dialog open={isHelpOpen} onOpenChange={(_event, data) => setIsHelpOpen(data.open)}>
+        <DialogSurface style={{ maxWidth: "720px", width: "100%" }}>
+          <DialogBody>
+            <DialogTitle>Platzhalter und Regeln</DialogTitle>
+            <DialogContent
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: tokens.spacingVerticalM,
+              }}
+            >
+              <div>
+                <strong>Nachrichten-Platzhalter</strong>
+                <ul>
+                  <li><code>{"{{appointment.title}}"}</code>: Betreff des Termins</li>
+                  <li><code>{"{{appointment.start}}"}</code>: Startdatum</li>
+                  <li><code>{"{{appointment.end}}"}</code>: Enddatum</li>
+                  <li><code>{"{{appointment.nextWorkingDayAfterEnd}}"}</code>: Nächster Arbeitstag nach dem Terminende, ohne Samstag und Sonntag</li>
+                  <li><code>{"{{appointment.location}}"}</code>: Ort des Termins</li>
+                  <li><code>{"{{rule.match}}"}</code>: Erste Capture Group eines passenden Regex, sonst der vollständige erste Regex-Treffer</li>
+                </ul>
+              </div>
+              <div>
+                <strong>Terminregeln</strong>
+                <ul>
+                  <li>Profilpriorität: Bei mehreren Treffern gewinnt die kleinste Zahl.</li>
+                  <li>Auto-Reply: Aktiviert oder deaktiviert die Outlook-Abwesenheitsnotiz für das Profil. Teams kann unabhängig davon gesetzt werden.</li>
+                  <li>Zeitsteuerung: Aktivierung vor dem Termin und Fortsetzung nach seinem Ende, jeweils in Stunden.</li>
+                  <li>Verknüpfung: <code>AND</code> verlangt alle Regeln, <code>OR</code> mindestens eine Regel.</li>
+                  <li>Felder: Titel, Ort und Kategorie können abgeglichen werden. Body und Organisator stehen in der Oberfläche bereit, werden von der aktuellen Kalenderanbindung aber noch nicht geliefert.</li>
+                  <li>Operatoren: enthält, beginnt mit, endet mit, exakt gleich sowie Regex. Regex kann als <code>/Muster/i</code> angegeben werden.</li>
+                  <li>Dauer: Mindest- und Höchstdauer in Minuten.</li>
+                  <li>Belegt-Status: Frei, vorläufig, gebucht, abwesend oder an anderem Ort tätig.</li>
+                  <li>Teams: Status, Statusnachricht und Wiederherstellen des vorherigen Status nach dem Termin.</li>
+                </ul>
+              </div>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="primary" onClick={() => setIsHelpOpen(false)}>
+                Schließen
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </FluentProvider>
   );
 }

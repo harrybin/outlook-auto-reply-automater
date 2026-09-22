@@ -133,6 +133,8 @@ export interface AutomationProfile {
   id: string;
   name: string;
   enabled: boolean;
+  /** Defaults to true for profiles created before this setting existed. */
+  enableAutoReply?: boolean;
   autoReplyMessageId: string;
   matchRules: AppointmentMatchRules;
   timingSettings: TimingSettings;
@@ -184,4 +186,6 @@ export interface AppSettings {
   locationSettings: LocationSettings;
   /** ID of currently active auto-reply (null if none) */
   activeAutoReplyId: string | null;
+  /** Prevents the initial default-rules prompt from reappearing after a choice. */
+  hasHandledDefaultRulesPrompt: boolean;
 }

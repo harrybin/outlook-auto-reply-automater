@@ -50,7 +50,9 @@ function mapBusyStatus(showAs: string): AppointmentBusyStatus {
 function toAppointmentInfo(event: GraphEvent): AppointmentInfo {
   const start = new Date(event.start.dateTime);
   const end = new Date(event.end.dateTime);
-  const durationMinutes = Math.round((end.getTime() - start.getTime()) / 60_000);
+  const durationMinutes = Math.round(
+    (end.getTime() - start.getTime()) / 60_000,
+  );
   return {
     id: event.id,
     title: event.subject ?? "",
@@ -69,12 +71,14 @@ function toAppointmentInfo(event: GraphEvent): AppointmentInfo {
  */
 export async function getUpcomingAppointments(
   graphClient: GraphClient,
-  count = 20
+  count = 20,
 ): Promise<AppointmentInfo[]> {
   const now = new Date().toISOString();
   const response = await graphClient
     .api("/me/calendarView")
-    .select("id,subject,bodyPreview,location,organizer,categories,start,end,isAllDay,showAs")
+    .select(
+      "id,subject,bodyPreview,location,organizer,categories,start,end,isAllDay,showAs",
+    )
     .filter(`start/dateTime ge '${now}'`)
     .top(count)
     .get();
@@ -84,7 +88,10 @@ export async function getUpcomingAppointments(
 
 // ─── Rule matching helpers ────────────────────────────────────────────────────
 
-function getFieldValue(appointment: AppointmentInfo, field: AppointmentMatchField): string {
+function getFieldValue(
+  appointment: AppointmentInfo,
+  field: AppointmentMatchField,
+): string {
   switch (field) {
     case "title":
       return appointment.title;
@@ -99,7 +106,10 @@ function getFieldValue(appointment: AppointmentInfo, field: AppointmentMatchFiel
   }
 }
 
-function matchesKeywordRule(appointment: AppointmentInfo, rule: KeywordRule): boolean {
+function matchesKeywordRule(
+  appointment: AppointmentInfo,
+  rule: KeywordRule,
+): boolean {
   const raw = getFieldValue(appointment, rule.field);
   const haystack = rule.caseSensitive ? raw : raw.toLowerCase();
   const needle = rule.caseSensitive ? rule.value : rule.value.toLowerCase();
@@ -115,7 +125,9 @@ function matchesKeywordRule(appointment: AppointmentInfo, rule: KeywordRule): bo
       return haystack === needle;
     case "regex":
       try {
-        const regexLiteralMatch = rule.value.match(/^\/([\s\S]*)\/([dgimsuvy]*)$/);
+        const regexLiteralMatch = rule.value.match(
+          /^\/([\s\S]*)\/([dgimsuvy]*)$/,
+        );
         if (regexLiteralMatch) {
           const [, pattern, flags] = regexLiteralMatch;
           const dedupedFlags = Array.from(new Set(flags.split("")));
@@ -125,7 +137,10 @@ function matchesKeywordRule(appointment: AppointmentInfo, rule: KeywordRule): bo
           return new RegExp(pattern, normalizedFlags).test(raw);
         }
 
-        return new RegExp(rule.value, rule.caseSensitive ? undefined : "i").test(raw);
+        return new RegExp(
+          rule.value,
+          rule.caseSensitive ? undefined : "i",
+        ).test(raw);
       } catch {
         return false;
       }
@@ -137,7 +152,7 @@ function matchesKeywordRule(appointment: AppointmentInfo, rule: KeywordRule): bo
  */
 export function appointmentMatchesProfile(
   appointment: AppointmentInfo,
-  profile: AutomationProfile
+  profile: AutomationProfile,
 ): boolean {
   const { matchRules, timingSettings: _ts } = profile;
   const results: boolean[] = [];
@@ -145,7 +160,7 @@ export function appointmentMatchesProfile(
   // Keyword rules
   if (matchRules.keywordRules.length > 0) {
     const kwResults = matchRules.keywordRules.map((r) =>
-      matchesKeywordRule(appointment, r)
+      matchesKeywordRule(appointment, r),
     );
     const kwMatch =
       matchRules.combinator === "AND"
@@ -164,12 +179,19 @@ export function appointmentMatchesProfile(
   }
 
   // Busy status rule
-  if (matchRules.busyStatusRule.enabled && matchRules.busyStatusRule.statuses.length > 0) {
-    results.push(matchRules.busyStatusRule.statuses.includes(appointment.busyStatus));
+  if (
+    matchRules.busyStatusRule.enabled &&
+    matchRules.busyStatusRule.statuses.length > 0
+  ) {
+    results.push(
+      matchRules.busyStatusRule.statuses.includes(appointment.busyStatus),
+    );
   }
 
   if (results.length === 0) return true; // no rules = always match
-  return matchRules.combinator === "AND" ? results.every(Boolean) : results.some(Boolean);
+  return matchRules.combinator === "AND"
+    ? results.every(Boolean)
+    : results.some(Boolean);
 }
 
 /**
@@ -178,13 +200,16 @@ export function appointmentMatchesProfile(
  */
 export function findMatchingAppointments(
   appointments: AppointmentInfo[],
-  profiles: AutomationProfile[]
+  profiles: AutomationProfile[],
 ): Array<{ appointment: AppointmentInfo; profile: AutomationProfile }> {
   const enabledProfiles = profiles
     .filter((p) => p.enabled)
     .sort((a, b) => a.priority - b.priority);
 
-  const results: Array<{ appointment: AppointmentInfo; profile: AutomationProfile }> = [];
+  const results: Array<{
+    appointment: AppointmentInfo;
+    profile: AutomationProfile;
+  }> = [];
 
   for (const appointment of appointments) {
     for (const profile of enabledProfiles) {

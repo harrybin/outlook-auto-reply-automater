@@ -70,6 +70,7 @@ function defaultProfile(): ProfileDraft {
   return {
     name: "",
     enabled: true,
+    enableAutoReply: true,
     autoReplyMessageId: "",
     priority: 50,
     matchRules: {
@@ -115,10 +116,11 @@ export function buildCopilotDraftForRule(
   message: AutoReplyMessage,
 ): OutlookMessageDraft {
   const keywordRules = profile.matchRules.keywordRules
-    .map((rule) => `${escapeHtml(rule.field)} ${escapeHtml(rule.operator)} "${escapeHtml(rule.value)}"`)
-    .join(
-      profile.matchRules.combinator === "AND" ? " and " : " or ",
-    );
+    .map(
+      (rule) =>
+        `${escapeHtml(rule.field)} ${escapeHtml(rule.operator)} "${escapeHtml(rule.value)}"`,
+    )
+    .join(profile.matchRules.combinator === "AND" ? " and " : " or ");
   const hasDurationFilter = profile.matchRules.durationRule.enabled;
   const hasBusyStatusFilter = profile.matchRules.busyStatusRule.enabled;
   const ruleSummary = [
@@ -304,56 +306,59 @@ export function ProfileList() {
         const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
         const canCreateMessage = hasMessage && canCreateOutlookMessage;
         return (
-        <div
-          key={p.id}
-          style={{
-            border: `1px solid ${tokens.colorNeutralStroke2}`,
-            borderRadius: tokens.borderRadiusMedium,
-            padding: tokens.spacingVerticalS,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <span style={{ fontWeight: "600" }}>{p.name}</span>
-            <span
-              style={{
-                marginLeft: 8,
-                color: tokens.colorNeutralForeground3,
-                fontSize: tokens.fontSizeBase200,
-              }}
-            >
-              Priority {p.priority} · {p.enabled ? "Enabled" : "Disabled"}
-            </span>
+          <div
+            key={p.id}
+            style={{
+              border: `1px solid ${tokens.colorNeutralStroke2}`,
+              borderRadius: tokens.borderRadiusMedium,
+              padding: tokens.spacingVerticalS,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <span style={{ fontWeight: "600" }}>{p.name}</span>
+              <span
+                style={{
+                  marginLeft: 8,
+                  color: tokens.colorNeutralForeground3,
+                  fontSize: tokens.fontSizeBase200,
+                }}
+              >
+                Priority {p.priority} · {p.enabled ? "Enabled" : "Disabled"} ·{" "}
+                {p.enableAutoReply !== false ? "Auto-reply" : "Teams only"}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: tokens.spacingHorizontalXS }}>
+              <Switch
+                checked={p.enabled}
+                onChange={(_e, d) =>
+                  updateProfile(p.id, { enabled: d.checked })
+                }
+              />
+              <Button
+                appearance="secondary"
+                size="small"
+                onClick={() => createMessageForRule(p)}
+                disabled={!canCreateMessage}
+              >
+                Create Message
+              </Button>
+              <Button
+                icon={<Edit24Regular />}
+                appearance="subtle"
+                size="small"
+                onClick={() => openEdit(p)}
+              />
+              <Button
+                icon={<Delete24Regular />}
+                appearance="subtle"
+                size="small"
+                onClick={() => deleteProfile(p.id)}
+              />
+            </div>
           </div>
-          <div style={{ display: "flex", gap: tokens.spacingHorizontalXS }}>
-            <Switch
-              checked={p.enabled}
-              onChange={(_e, d) => updateProfile(p.id, { enabled: d.checked })}
-            />
-            <Button
-              appearance="secondary"
-              size="small"
-              onClick={() => createMessageForRule(p)}
-              disabled={!canCreateMessage}
-            >
-              Create Message
-            </Button>
-            <Button
-              icon={<Edit24Regular />}
-              appearance="subtle"
-              size="small"
-              onClick={() => openEdit(p)}
-            />
-            <Button
-              icon={<Delete24Regular />}
-              appearance="subtle"
-              size="small"
-              onClick={() => deleteProfile(p.id)}
-            />
-          </div>
-        </div>
         );
       })}
 
@@ -387,6 +392,16 @@ export function ProfileList() {
                   }
                 />
               </Field>
+              <Switch
+                checked={draft.enableAutoReply !== false}
+                onChange={(_e, data) =>
+                  setDraft((profile) => ({
+                    ...profile,
+                    enableAutoReply: data.checked,
+                  }))
+                }
+                label="Enable Outlook auto-reply"
+              />
               <Field label="Auto-reply message" required>
                 <Dropdown
                   value={
@@ -836,7 +851,10 @@ export function ProfileList() {
               <Button
                 appearance="primary"
                 onClick={handleSave}
-                disabled={!draft.name.trim() || !draft.autoReplyMessageId}
+                disabled={
+                  !draft.name.trim() ||
+                  (draft.enableAutoReply !== false && !draft.autoReplyMessageId)
+                }
               >
                 Save
               </Button>

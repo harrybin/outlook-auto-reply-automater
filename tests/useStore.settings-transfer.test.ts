@@ -58,6 +58,7 @@ const BASE_SETTINGS: AppSettings = {
     ],
   },
   activeAutoReplyId: "msg-1",
+  hasHandledDefaultRulesPrompt: true,
 };
 
 const EMPTY_SETTINGS: AppSettings = {
@@ -69,6 +70,7 @@ const EMPTY_SETTINGS: AppSettings = {
     rules: [],
   },
   activeAutoReplyId: null,
+  hasHandledDefaultRulesPrompt: false,
 };
 
 describe("useStore settings import/export", () => {
@@ -87,6 +89,7 @@ describe("useStore settings import/export", () => {
     expect(parsed.automationProfiles).toHaveLength(1);
     expect(parsed.locationSettings.pollIntervalSeconds).toBe(45);
     expect(parsed.activeAutoReplyId).toBe("msg-1");
+    expect(parsed.hasHandledDefaultRulesPrompt).toBe(true);
   });
 
   it("imports valid settings JSON", () => {
@@ -100,6 +103,7 @@ describe("useStore settings import/export", () => {
     expect(state.automationProfiles).toHaveLength(1);
     expect(state.locationSettings.rules).toHaveLength(1);
     expect(state.activeAutoReplyId).toBe("msg-1");
+    expect(state.hasHandledDefaultRulesPrompt).toBe(true);
   });
 
   it("rejects invalid JSON", () => {
@@ -109,5 +113,21 @@ describe("useStore settings import/export", () => {
     if (!result.success) {
       expect(result.error).toBe("Invalid JSON file.");
     }
+  });
+
+  it("creates defaults once and allows their later deletion without prompting again", () => {
+    useStore.getState().handleDefaultRulesPrompt(true);
+
+    const created = useStore.getState();
+    expect(created.autoReplyMessages).toHaveLength(3);
+    expect(created.automationProfiles).toHaveLength(3);
+    expect(created.hasHandledDefaultRulesPrompt).toBe(true);
+
+    for (const profile of created.automationProfiles) {
+      useStore.getState().deleteProfile(profile.id);
+    }
+
+    expect(useStore.getState().automationProfiles).toEqual([]);
+    expect(useStore.getState().hasHandledDefaultRulesPrompt).toBe(true);
   });
 });

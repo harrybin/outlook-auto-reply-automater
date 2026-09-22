@@ -24,6 +24,7 @@ The latest production manifest is always available directly from the hosted depl
 ## Features
 
 - **Calendar-based automation** – Trigger auto-reply messages based on appointment keywords, duration, busy status, and categories.
+- **Ready-to-use replies** – Includes preconfigured messages and matching rules for travel, training, and customer visits.
 - **Flexible matching rules** – Match appointments by title, body, location, organizer, or category using operators like contains, startsWith, endsWith, equals, and regex.
 - **Timing control** – Configure auto-reply to activate hours before an appointment and deactivate hours after it ends.
 - **Location awareness** – Factor in geographic location and WiFi network to determine when to enable auto-reply.
@@ -100,6 +101,7 @@ After sideloading, use this flow to configure and run automation:
 
 3. **Create an automation profile**
     - Link the profile to one of your message templates.
+    - The initial configuration includes profiles that recognize `Reise`, `Training`, and `außer Haus beim Kunden` in the appointment title. Training requires a minimum duration of four hours, so multi-day events also match.
     - Add matching rules for appointment fields such as title, location, organizer, or categories.
     - Optionally constrain by busy status, all-day flag, and minimum duration.
 

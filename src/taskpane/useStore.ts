@@ -16,7 +16,11 @@ import type {
   LocationSettings,
   TeamsPresenceStatus,
 } from "./types";
-import { loadSettings, saveSettings } from "./services/storageService";
+import {
+  getDefaultRulesAndMessages,
+  loadSettings,
+  saveSettings,
+} from "./services/storageService";
 
 interface AppStore extends AppSettings {
   // ── Message CRUD ───────────────────────────────────────────────────────────
@@ -44,6 +48,9 @@ interface AppStore extends AppSettings {
 
   // ── Active auto-reply ─────────────────────────────────────────────────────
   setActiveAutoReplyId: (id: string | null) => void;
+
+  // ── Default content ───────────────────────────────────────────────────────
+  handleDefaultRulesPrompt: (createDefaults: boolean) => void;
 
   // ── Persistence ───────────────────────────────────────────────────────────
   loadFromStorage: () => void;
@@ -287,6 +294,7 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
     id: value.id,
     name: value.name,
     enabled: asBoolean(value.enabled, true),
+    enableAutoReply: asBoolean(value.enableAutoReply, true),
     autoReplyMessageId: value.autoReplyMessageId,
     priority: asNonNegativeNumber(value.priority, 50),
     createdAt: asString(value.createdAt, now()),
@@ -365,6 +373,10 @@ function normalizeImportedSettings(value: unknown): AppSettings | null {
     automationProfiles,
     locationSettings: normalizeLocationSettings(value.locationSettings),
     activeAutoReplyId,
+    hasHandledDefaultRulesPrompt: asBoolean(
+      value.hasHandledDefaultRulesPrompt,
+      true,
+    ),
   };
 }
 
@@ -476,6 +488,25 @@ export const useStore = create<AppStore>((set, get) => ({
     });
   },
 
+  // ── Default content ───────────────────────────────────────────────────────
+  handleDefaultRulesPrompt(createDefaults) {
+    set((s) => {
+      const defaults = createDefaults ? getDefaultRulesAndMessages() : null;
+      const updated = {
+        ...s,
+        autoReplyMessages: defaults
+          ? [...s.autoReplyMessages, ...defaults.autoReplyMessages]
+          : s.autoReplyMessages,
+        automationProfiles: defaults
+          ? [...s.automationProfiles, ...defaults.automationProfiles]
+          : s.automationProfiles,
+        hasHandledDefaultRulesPrompt: true,
+      };
+      saveSettings(updated);
+      return updated;
+    });
+  },
+
   // ── Storage ───────────────────────────────────────────────────────────────
   loadFromStorage() {
     const stored = loadSettings();
@@ -489,6 +520,7 @@ export const useStore = create<AppStore>((set, get) => ({
       automationProfiles: current.automationProfiles,
       locationSettings: current.locationSettings,
       activeAutoReplyId: current.activeAutoReplyId,
+      hasHandledDefaultRulesPrompt: current.hasHandledDefaultRulesPrompt,
     };
     return JSON.stringify(settings, null, 2);
   },

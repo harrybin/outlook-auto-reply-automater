@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { AppointmentInfo, AutomationProfile, KeywordRule } from "@/taskpane/types";
+import type {
+  AppointmentInfo,
+  AutomationProfile,
+  KeywordRule,
+} from "@/taskpane/types";
 import { appointmentMatchesProfile } from "@/taskpane/services/calendarService";
 
 function createProfile(rule: KeywordRule): AutomationProfile {
@@ -79,5 +83,78 @@ describe("appointmentMatchesProfile regex rules", () => {
     });
 
     expect(appointmentMatchesProfile(APPOINTMENT, profile)).toBe(false);
+  });
+});
+
+describe("appointmentMatchesProfile training preset", () => {
+  it("matches Training appointments of four hours or longer, including multi-day appointments", () => {
+    const profile = createProfile({
+      id: "rule-training",
+      field: "title",
+      operator: "contains",
+      value: "Workshop",
+      caseSensitive: false,
+    });
+    profile.matchRules = {
+      ...profile.matchRules,
+      keywordRules: [
+        {
+          id: "training-keyword",
+          field: "title",
+          operator: "contains",
+          value: "Training",
+          caseSensitive: false,
+        },
+      ],
+      durationRule: { enabled: true, minMinutes: 240 },
+    };
+
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, title: "Training", durationMinutes: 240 },
+        profile,
+      ),
+    ).toBe(true);
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, title: "Training", durationMinutes: 2_880 },
+        profile,
+      ),
+    ).toBe(true);
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, title: "Training", durationMinutes: 239 },
+        profile,
+      ),
+    ).toBe(false);
+  });
+
+  it("matches a Travel appointment by its title", () => {
+    const profile = createProfile({
+      id: "rule-travel",
+      field: "title",
+      operator: "contains",
+      value: "unused",
+      caseSensitive: false,
+    });
+    profile.matchRules = {
+      ...profile.matchRules,
+      keywordRules: [
+        {
+          id: "travel-keyword",
+          field: "title",
+          operator: "contains",
+          value: "Reise",
+          caseSensitive: false,
+        },
+      ],
+    };
+
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, title: "Reise nach Berlin" },
+        profile,
+      ),
+    ).toBe(true);
   });
 });

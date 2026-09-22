@@ -1,10 +1,11 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/taskpane/App";
 
 vi.mock("@/taskpane/components/AutoReplyList", () => ({
-  AutoReplyList: () => createElement("div", { "data-testid": "auto-reply-list" }),
+  AutoReplyList: () =>
+    createElement("div", { "data-testid": "auto-reply-list" }),
 }));
 
 vi.mock("@/taskpane/components/ProfileList", () => ({
@@ -26,7 +27,9 @@ describe("App Office theme handlers", () => {
       EventType: {
         OfficeThemeChanged: "officeThemeChanged",
       },
-      onReady: vi.fn(() => Promise.resolve({ host: "Outlook", platform: "Web" })),
+      onReady: vi.fn(() =>
+        Promise.resolve({ host: "Outlook", platform: "Web" }),
+      ),
       context: {
         officeTheme: {
           bodyBackgroundColor: "#ffffff",
@@ -55,5 +58,31 @@ describe("App Office theme handlers", () => {
     expect(removeHandlerAsync).toHaveBeenCalledWith(
       globalThis.Office.EventType.OfficeThemeChanged,
     );
+  });
+
+  it("opens the placeholder and rules help dialog", () => {
+    localStorage.setItem(
+      "outlookAutoReplyAutomater_settings",
+      JSON.stringify({
+        autoReplyMessages: [],
+        automationProfiles: [],
+        locationSettings: {
+          enabled: false,
+          pollIntervalSeconds: 60,
+          rules: [],
+        },
+        activeAutoReplyId: null,
+        hasHandledDefaultRulesPrompt: true,
+      }),
+    );
+
+    render(createElement(App));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Hilfe zu Platzhaltern und Regeln" }),
+    );
+
+    expect(screen.getByText("Platzhalter und Regeln")).toBeInTheDocument();
+    expect(screen.getByText("{{rule.match}}")).toBeInTheDocument();
   });
 });

@@ -143,7 +143,10 @@ export function AutoReplyList() {
       setDraft((p) => ({ ...p, body: p.body + emoji }));
     } else {
       const cursor = savedTextareaCursorRef.current;
-      const pos = cursor ?? { start: draft.body.length, end: draft.body.length };
+      const pos = cursor ?? {
+        start: draft.body.length,
+        end: draft.body.length,
+      };
       const newBody =
         draft.body.substring(0, pos.start) +
         emoji +
@@ -151,7 +154,10 @@ export function AutoReplyList() {
       setDraft((p) => ({ ...p, body: newBody }));
       // Restore cursor position after React re-renders
       const newCursorPos = pos.start + emoji.length;
-      savedTextareaCursorRef.current = { start: newCursorPos, end: newCursorPos };
+      savedTextareaCursorRef.current = {
+        start: newCursorPos,
+        end: newCursorPos,
+      };
       requestAnimationFrame(() => {
         const ta = textareaRef.current;
         if (ta) {
@@ -295,6 +301,17 @@ export function AutoReplyList() {
                   label={draft.isHtml ? "HTML" : "Plain text"}
                 />
               </Field>
+              <span
+                style={{
+                  color: tokens.colorNeutralForeground3,
+                  fontSize: tokens.fontSizeBase200,
+                }}
+              >
+                Platzhalter: {"{{appointment.title}}"},{" "}
+                {"{{appointment.start}}"}, {"{{appointment.end}}"},{" "}
+                {"{{appointment.nextWorkingDayAfterEnd}}"},{" "}
+                {"{{appointment.location}}"}, {"{{rule.match}}"}
+              </span>
             </DialogContent>
             <DialogActions>
               <DialogTrigger disableButtonEnhancement>
