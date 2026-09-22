@@ -492,13 +492,29 @@ export const useStore = create<AppStore>((set, get) => ({
   handleDefaultRulesPrompt(createDefaults) {
     set((s) => {
       const defaults = createDefaults ? getDefaultRulesAndMessages() : null;
+      const existingMessageIds = new Set(
+        s.autoReplyMessages.map((message) => message.id),
+      );
+      const existingProfileIds = new Set(
+        s.automationProfiles.map((profile) => profile.id),
+      );
       const updated = {
         ...s,
         autoReplyMessages: defaults
-          ? [...s.autoReplyMessages, ...defaults.autoReplyMessages]
+          ? [
+              ...s.autoReplyMessages,
+              ...defaults.autoReplyMessages.filter(
+                (message) => !existingMessageIds.has(message.id),
+              ),
+            ]
           : s.autoReplyMessages,
         automationProfiles: defaults
-          ? [...s.automationProfiles, ...defaults.automationProfiles]
+          ? [
+              ...s.automationProfiles,
+              ...defaults.automationProfiles.filter(
+                (profile) => !existingProfileIds.has(profile.id),
+              ),
+            ]
           : s.automationProfiles,
         hasHandledDefaultRulesPrompt: true,
       };

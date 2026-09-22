@@ -119,9 +119,20 @@ describe("useStore settings import/export", () => {
     useStore.getState().handleDefaultRulesPrompt(true);
 
     const created = useStore.getState();
-    expect(created.autoReplyMessages).toHaveLength(3);
-    expect(created.automationProfiles).toHaveLength(3);
+    expect(created.autoReplyMessages).toHaveLength(5);
+    expect(created.automationProfiles).toHaveLength(5);
+    expect(created.autoReplyMessages.map((message) => message.name)).toEqual([
+      "Vacation – Out of Office",
+      "In a Meeting",
+      "Public Holiday",
+      "Training – Teams only",
+      "Traveling",
+    ]);
     expect(created.hasHandledDefaultRulesPrompt).toBe(true);
+
+    useStore.getState().handleDefaultRulesPrompt(true);
+    expect(useStore.getState().autoReplyMessages).toHaveLength(5);
+    expect(useStore.getState().automationProfiles).toHaveLength(5);
 
     for (const profile of created.automationProfiles) {
       useStore.getState().deleteProfile(profile.id);

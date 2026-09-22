@@ -79,10 +79,18 @@ describe("App Office theme handlers", () => {
     render(createElement(App));
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Hilfe zu Platzhaltern und Regeln" }),
+      screen.getByRole("button", { name: "Help with placeholders and rules" }),
     );
 
-    expect(screen.getByText("Platzhalter und Regeln")).toBeInTheDocument();
+    expect(screen.getByText("Placeholders and Rules")).toBeInTheDocument();
     expect(screen.getByText("{{rule.match}}")).toBeInTheDocument();
+  });
+
+  it("provides a button to create the default rules", () => {
+    render(createElement(App));
+
+    expect(
+      screen.getByRole("button", { name: "Create Default Rules" }),
+    ).toBeInTheDocument();
   });
 });
