@@ -11,14 +11,9 @@ permissions:
 
 jobs:
     release:
-        if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+        if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout deployed revision
-              uses: actions/checkout@v4
-              with:
-                  ref: ${{ github.event.workflow_run.head_sha }}
-
             - name: Download manifest artifact
               env:
                   GH_TOKEN: ${{ github.token }}
@@ -27,39 +22,47 @@ jobs:
                     --name outlook-addin-manifest \
                     --dir dist/deployment
 
-            - name: Read release version
-              id: version
-              run: echo "value=v$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
-
-            - name: Prepare release asset
-              run: cp dist/deployment/manifest.json manifest.json
-
-            - name: Write release notes
+            - name: Read release metadata
+              env:
+                  GH_TOKEN: ${{ github.token }}
               run: |
-                  cat <<'EOF' > release-notes.md
+                  package_json=$(
+                    gh api "repos/${GITHUB_REPOSITORY}/contents/package.json?ref=${{ github.event.workflow_run.head_sha }}" \
+                      --jq '.content' | base64 --decode
+                  )
+                  version=$(printf '%s' "$package_json" | jq -r '.version')
+                  if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
+                    echo "::error::Invalid package.json version: $version"
+                    exit 1
+                  fi
+                  release_tag="v$version"
+                  echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
+                  cat <<EOF > release-notes.md
                   ## ⬇️ Install the Add-in
 
                   The latest production manifest is available from both the hosted deployment and this release asset:
 
                   - [📥 Download manifest.json (hosted)](https://outlook-auto-reply-automater.harrybin.de/manifest.json)
-                  - [📦 Download manifest.json (release asset)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.value }}/manifest.json)
+                  - [📦 Download manifest.json (release asset)](https://github.com/${GITHUB_REPOSITORY}/releases/download/${release_tag}/manifest.json)
 
                   ### How to install in Outlook
 
-                  1. Click the download link above and save `manifest.json` to your computer.
+                  1. Click the download link above and save \`manifest.json\` to your computer.
                   2. Open **Outlook** (desktop or web).
                   3. Go to **Get Add-ins** / **Apps** (or **Manage Add-ins** in Outlook on the web).
                   4. Choose **My add-ins** → **Add a custom add-in** → **Add from file…**
-                  5. Select the downloaded `manifest.json`.
+                  5. Select the downloaded \`manifest.json\`.
                   6. The **Auto-Reply Automater** add-in will appear in your Outlook ribbon or Apps menu.
 
-                  > **Note:** This hosted manifest is generated from the root `manifest.json` during deployment and points to `https://outlook-auto-reply-automater.harrybin.de` — no local server required.
+                  > **Note:** This hosted manifest is generated from the root \`manifest.json\` during deployment and points to \`https://outlook-auto-reply-automater.harrybin.de\` — no local server required.
                   EOF
+
+            - name: Prepare release asset
+              run: cp dist/deployment/manifest.json manifest.json
 
             - name: Create or update release
               env:
                   GH_TOKEN: ${{ github.token }}
-                  RELEASE_TAG: ${{ steps.version.outputs.value }}
                   RELEASE_TARGET: ${{ github.event.workflow_run.head_sha }}
               run: |
                   if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
