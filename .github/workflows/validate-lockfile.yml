@@ -25,4 +25,4 @@ jobs:
                   cache: npm
 
             - name: Validate committed lockfile
-              run: npm ci --ignore-scripts
+              run: npm install --ignore-scripts
