@@ -33,10 +33,6 @@ import type {
 } from "../types";
 import { useStore } from "../useStore";
 import { nanoid } from "../utils/nanoid";
-import { getGraphClient } from "../services/authService";
-import { clearTeamsPresence, setTeamsPresence } from "../services/teamsService";
-
-const TEAMS_STATUS_TEST_DURATION_MS = 3000;
 
 const BUSY_STATUSES: AppointmentBusyStatus[] = [
   "free",
