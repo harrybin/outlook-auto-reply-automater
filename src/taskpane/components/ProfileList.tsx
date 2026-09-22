@@ -33,6 +33,10 @@ import type {
 } from "../types";
 import { useStore } from "../useStore";
 import { nanoid } from "../utils/nanoid";
+import { getGraphClient } from "../services/authService";
+import { clearTeamsPresence, setTeamsPresence } from "../services/teamsService";
+
+const TEAMS_STATUS_TEST_DURATION_MS = 3000;
 
 const BUSY_STATUSES: AppointmentBusyStatus[] = [
   "free",
@@ -463,7 +467,12 @@ export function ProfileList() {
           }
         }}
       >
-        <DialogSurface style={{ maxWidth: "600px", width: "100%" }}>
+        <DialogSurface
+          style={{
+            width: "calc(100vw - 32px)",
+            maxWidth: "none",
+          }}
+        >
           <DialogBody>
             <DialogTitle>
               {isNew ? "New Automation Profile" : "Edit Automation Profile"}
