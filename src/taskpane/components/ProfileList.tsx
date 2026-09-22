@@ -115,7 +115,7 @@ export function buildCopilotDraftForRule(
   message: AutoReplyMessage,
 ): OutlookMessageDraft {
   const keywordRules = profile.matchRules.keywordRules
-    .map((rule) => `${rule.field} ${rule.operator} "${rule.value}"`)
+    .map((rule) => `${escapeHtml(rule.field)} ${escapeHtml(rule.operator)} "${escapeHtml(rule.value)}"`)
     .join(
       profile.matchRules.combinator === "AND" ? " and " : " or ",
     );
