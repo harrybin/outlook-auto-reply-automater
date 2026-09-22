@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -23,6 +23,7 @@ import {
   Edit24Regular,
 } from "@fluentui/react-icons";
 import type {
+  AutoReplyMessage,
   AutomationProfile,
   AppointmentBusyStatus,
   AppointmentMatchField,
@@ -56,6 +57,15 @@ const OPERATORS: AppointmentMatchOperator[] = [
 
 type ProfileDraft = Omit<AutomationProfile, "id" | "createdAt" | "updatedAt">;
 
+interface OutlookMessageDraft {
+  subject: string;
+  htmlBody: string;
+}
+
+interface OutlookMailboxContext {
+  displayNewMessageForm?: (message: OutlookMessageDraft) => void;
+}
+
 function defaultProfile(): ProfileDraft {
   return {
     name: "",
@@ -83,6 +93,68 @@ function defaultProfile(): ProfileDraft {
   };
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMessageBody(message: AutoReplyMessage): string {
+  if (message.isHtml) {
+    return message.body;
+  }
+
+  return escapeHtml(message.body).replace(/\n/g, "<br/>");
+}
+
+export function buildCopilotDraftForRule(
+  profile: AutomationProfile,
+  message: AutoReplyMessage,
+): OutlookMessageDraft {
+  const keywordRules = profile.matchRules.keywordRules
+    .map((rule) => `${escapeHtml(rule.field)} ${escapeHtml(rule.operator)} "${escapeHtml(rule.value)}"`)
+    .join(
+      profile.matchRules.combinator === "AND" ? " and " : " or ",
+    );
+  const hasDurationFilter = profile.matchRules.durationRule.enabled;
+  const hasBusyStatusFilter = profile.matchRules.busyStatusRule.enabled;
+  const ruleSummary = [
+    keywordRules ? `Keyword rules: ${keywordRules}` : null,
+    hasDurationFilter
+      ? `Duration: ${profile.matchRules.durationRule.minMinutes ?? 0}-${profile.matchRules.durationRule.maxMinutes ?? "any"} minutes`
+      : null,
+    hasBusyStatusFilter
+      ? `Busy status: ${profile.matchRules.busyStatusRule.statuses.join(", ")}`
+      : null,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join("<br/>");
+
+  return {
+    subject: message.subject,
+    htmlBody: `<p><strong>Copilot context for Outlook</strong></p>
+<p>This draft was created from automation profile <strong>${escapeHtml(profile.name)}</strong>.</p>
+<p>Please use Copilot in Outlook to suggest and refine a professional reply matching this rule intent.</p>
+${ruleSummary ? `<p>${ruleSummary}</p>` : ""}
+<hr/>
+${formatMessageBody(message)}`,
+  };
+}
+
+function getOutlookMailbox(): OutlookMailboxContext | undefined {
+  const officeGlobal = (
+    globalThis as { Office?: { context?: { mailbox?: OutlookMailboxContext } } }
+  ).Office;
+  return officeGlobal?.context?.mailbox as OutlookMailboxContext | undefined;
+}
+
+export function canCreateOutlookMessageForRule(): boolean {
+  return Boolean(getOutlookMailbox()?.displayNewMessageForm);
+}
+
 export function ProfileList() {
   const profiles = useStore((s) => s.automationProfiles);
   const messages = useStore((s) => s.autoReplyMessages);
@@ -93,6 +165,35 @@ export function ProfileList() {
   const [editing, setEditing] = useState<AutomationProfile | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(defaultProfile());
+  const [canCreateOutlookMessage, setCanCreateOutlookMessage] = useState(() =>
+    canCreateOutlookMessageForRule(),
+  );
+
+  useEffect(() => {
+    if (typeof Office === "undefined") {
+      return;
+    }
+
+    let isDisposed = false;
+    const syncComposeCapability = () => {
+      if (!isDisposed) {
+        setCanCreateOutlookMessage(canCreateOutlookMessageForRule());
+      }
+    };
+
+    syncComposeCapability();
+
+    void Office.onReady().then(
+      () => {
+        syncComposeCapability();
+      },
+      () => undefined,
+    );
+
+    return () => {
+      isDisposed = true;
+    };
+  }, []);
 
   const openNew = () => {
     setDraft(defaultProfile());
@@ -153,6 +254,16 @@ export function ProfileList() {
     }));
   };
 
+  const createMessageForRule = (profile: AutomationProfile) => {
+    const message = messages.find((m) => m.id === profile.autoReplyMessageId);
+    if (!message) return;
+
+    const mailbox = getOutlookMailbox();
+    if (!mailbox?.displayNewMessageForm) return;
+
+    mailbox.displayNewMessageForm(buildCopilotDraftForRule(profile, message));
+  };
+
   const isOpen = isNew || editing !== null;
 
   return (
@@ -189,7 +300,10 @@ export function ProfileList() {
         </p>
       )}
 
-      {profiles.map((p) => (
+      {profiles.map((p) => {
+        const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
+        const canCreateMessage = hasMessage && canCreateOutlookMessage;
+        return (
         <div
           key={p.id}
           style={{
@@ -219,6 +333,14 @@ export function ProfileList() {
               onChange={(_e, d) => updateProfile(p.id, { enabled: d.checked })}
             />
             <Button
+              appearance="secondary"
+              size="small"
+              onClick={() => createMessageForRule(p)}
+              disabled={!canCreateMessage}
+            >
+              Create Message
+            </Button>
+            <Button
               icon={<Edit24Regular />}
               appearance="subtle"
               size="small"
@@ -232,7 +354,8 @@ export function ProfileList() {
             />
           </div>
         </div>
-      ))}
+        );
+      })}
 
       <Dialog
         open={isOpen}
