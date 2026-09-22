@@ -217,6 +217,24 @@ scripts/
 4. **Set priorities** – When multiple profiles match, the one with the lowest priority number wins.
 5. **Let it run** – The add-in monitors your calendar and automatically enables/disables your Outlook auto-reply based on your configured rules.
 
+## When Rules Are Applied
+
+The current implementation stores timing and location settings in your profiles, but it does not yet run an automatic evaluator that turns auto-replies on, off, or between messages for you.
+
+### Calendar-based rules
+
+Calendar matching currently checks upcoming appointments whose start time is in the future and evaluates only the profile match rules. The timing settings (`hoursBeforeAppointment`, `hoursAfterAppointment`, `enableBefore`, and `enableAfter`) are saved with the profile, but they are not enforced at runtime yet.
+
+### Location-based rules
+
+Location settings, including `pollIntervalSeconds`, are persisted in the configuration, but location conditions are not currently polled or applied automatically.
+
+### When the active reply message may change
+
+At the moment, the active auto-reply message does not change automatically from calendar or location rules. These settings are configuration data only until an evaluator/scheduler is implemented.
+
+> **Tip:** If multiple profiles could match the same appointment data, the profile with the **lowest priority number** wins in the current matching logic.
+
 ## Technology Stack
 
 - [React 18](https://react.dev/) – UI framework
