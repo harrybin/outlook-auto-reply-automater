@@ -183,9 +183,12 @@ export function ProfileList() {
 
     syncComposeCapability();
 
-    void Office.onReady().then(() => {
-      syncComposeCapability();
-    });
+    void Office.onReady().then(
+      () => {
+        syncComposeCapability();
+      },
+      () => undefined,
+    );
 
     return () => {
       isDisposed = true;
