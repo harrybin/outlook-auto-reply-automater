@@ -37,6 +37,35 @@ export default defineConfig(() => ({
         taskpane: resolve(__dirname, "src/taskpane/index.html"),
         demo: resolve(__dirname, "src/demo/index.html"),
       },
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+
+          if (id.includes("@fluentui/react-icons")) {
+            return "fluent-icons";
+          }
+
+          if (id.includes("@fluentui")) {
+            return "fluent-ui";
+          }
+
+          if (id.includes("@azure/msal") || id.includes("microsoft-graph")) {
+            return "graph-auth";
+          }
+
+          if (id.includes("react-simple-wysiwyg")) {
+            return "rich-text-editor";
+          }
+
+          if (id.includes("react") || id.includes("scheduler")) {
+            return "react-vendor";
+          }
+
+          return "vendor";
+        },
+      },
     },
     sourcemap: true,
   },
