@@ -380,9 +380,10 @@ function MessageCard({ message, onEdit, onDelete }: MessageCardProps) {
       >
         <Button
           icon={<Edit24Regular />}
-          appearance="subtle"
+          appearance="primary"
           size="small"
           onClick={onEdit}
+          style={{ minWidth: "56px" }}
         />
         <Button
           icon={<Delete24Regular />}

@@ -160,7 +160,7 @@ describe("canCreateOutlookMessageForRule", () => {
     render(createElement(ProfileList));
 
     const createMessageButton = screen.getByRole("button", {
-      name: "Create Message",
+      name: "Preview",
     });
     expect(createMessageButton).toBeDisabled();
 
