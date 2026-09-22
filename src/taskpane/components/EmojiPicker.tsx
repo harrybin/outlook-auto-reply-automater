@@ -56,7 +56,8 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
           icon={<Emoji24Regular />}
           appearance="subtle"
           size="small"
-          title="Insert emoji"
+aria-label="Insert emoji"
+title="Insert emoji"
         />
       </PopoverTrigger>
       <PopoverSurface style={{ padding: tokens.spacingVerticalS }}>
