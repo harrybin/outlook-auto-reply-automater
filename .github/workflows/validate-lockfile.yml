@@ -25,4 +25,4 @@ jobs:
                   cache: npm
 
             - name: Validate committed lockfile
-              run: npm install --ignore-scripts
+              run: npm ci --ignore-scripts --legacy-peer-deps
