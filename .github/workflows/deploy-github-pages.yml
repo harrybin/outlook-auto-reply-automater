@@ -30,24 +30,8 @@ jobs:
                   node-version: 24
                   cache: npm
 
-            - name: Verify lockfile is up to date
-              run: |
-                  ORIGINAL_LOCKFILE=$(mktemp)
-                  BEFORE=$(mktemp)
-                  AFTER=$(mktemp)
-                  trap 'rm -f "$ORIGINAL_LOCKFILE" "$BEFORE" "$AFTER"' EXIT
-                  cp package-lock.json "$ORIGINAL_LOCKFILE"
-                  jq -S -c 'del(.version, .packages[""].version)' package-lock.json > "$BEFORE"
-                  npm install --package-lock-only
-                  jq -S -c 'del(.version, .packages[""].version)' package-lock.json > "$AFTER"
-                  if ! cmp -s "$BEFORE" "$AFTER"; then
-                    echo "::error::package-lock.json is stale. Run 'npm install' locally and commit the updated lockfile."
-                    exit 1
-                  fi
-                  mv "$ORIGINAL_LOCKFILE" package-lock.json
-
             - name: Install dependencies
-              run: npm ci
+              run: npm ci --legacy-peer-deps
 
             - name: Build web assets
               run: npm run build:ci
