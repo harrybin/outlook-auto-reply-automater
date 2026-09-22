@@ -125,12 +125,19 @@ jobs:
                   EOF
 
             - name: Create or update release
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: ${{ steps.version.outputs.value }}
-                  name: ${{ steps.version.outputs.value }}
-                  body_path: release-notes.md
-                  files: dist/deployment/manifest.json
-                  fail_on_unmatched_files: true
-                  append_body: false
-                  make_latest: true
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ steps.version.outputs.value }}
+              run: |
+                  if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+                    gh release edit "$RELEASE_TAG" \
+                      --title "$RELEASE_TAG" \
+                      --notes-file release-notes.md \
+                      --latest
+                    gh release upload "$RELEASE_TAG" dist/deployment/manifest.json --clobber
+                  else
+                    gh release create "$RELEASE_TAG" dist/deployment/manifest.json \
+                      --title "$RELEASE_TAG" \
+                      --notes-file release-notes.md \
+                      --latest
+                  fi
