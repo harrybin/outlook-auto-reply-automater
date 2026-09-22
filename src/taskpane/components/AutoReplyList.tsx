@@ -118,12 +118,15 @@ export function AutoReplyList() {
       const contentEditable = container?.querySelector(
         "[contenteditable]",
       ) as HTMLElement | null;
-      if (contentEditable && blurRangeRef.current) {
+      const savedRange = blurRangeRef.current;
+      if (
+        contentEditable &&
+        savedRange &&
+        contentEditable.contains(savedRange.commonAncestorContainer)
+      ) {
         contentEditable.focus();
         const sel = window.getSelection();
         if (sel) {
-          sel.removeAllRanges();
-          sel.addRange(blurRangeRef.current);
           const range = sel.getRangeAt(0);
           range.deleteContents();
           const textNode = document.createTextNode(emoji);
