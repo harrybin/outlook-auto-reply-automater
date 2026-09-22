@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "build:ci": "tsc && vite build",
     "build:local": "npm run build && office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",
-    "preview": "vite preview --https",
+    "preview": "vite preview",
     "lint": "eslint src tests --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src tests --ext .ts,.tsx --fix",
     "test": "vitest run",
@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -66,10 +67,14 @@
     "fs-extra": "^11.3.5",
     "jsdom": "^26.1.0",
     "office-addin-cli": "^2.0.9",
-    "office-addin-debugging": "^6.1.1",
-    "office-addin-manifest": "^2.1.5",
+    "office-addin-debugging": "^7.0.0",
+    "office-addin-manifest": "^3.0.0",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "adm-zip": "0.6.1",
+    "esbuild": "0.28.2"
   }
 }
