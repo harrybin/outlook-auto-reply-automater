@@ -139,7 +139,8 @@ export interface AutomationProfile {
   matchRules: AppointmentMatchRules;
   timingSettings: TimingSettings;
   teamsStatusSettings: TeamsStatusSettings;
-  priority: number; // Lower = higher priority when multiple profiles match
+  /** Legacy field kept for older saved data; list order now controls precedence. */
+  priority: number;
   createdAt: string;
   updatedAt: string;
 }

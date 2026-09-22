@@ -41,6 +41,7 @@ interface AppStore extends AppSettings {
     id: string,
     changes: Partial<Omit<AutomationProfile, "id">>,
   ) => void;
+  reorderProfiles: (fromId: string, toId: string) => void;
   deleteProfile: (id: string) => void;
 
   // ── Location settings ─────────────────────────────────────────────────────
@@ -451,6 +452,29 @@ export const useStore = create<AppStore>((set, get) => ({
         p.id === id ? { ...p, ...changes, updatedAt: now() } : p,
       );
       const updated = { ...s, automationProfiles: profiles };
+      saveSettings(updated);
+      return updated;
+    });
+  },
+
+  reorderProfiles(fromId, toId) {
+    set((s) => {
+      const fromIndex = s.automationProfiles.findIndex(
+        (profile) => profile.id === fromId,
+      );
+      const toIndex = s.automationProfiles.findIndex(
+        (profile) => profile.id === toId,
+      );
+
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+        return s;
+      }
+
+      const updatedProfiles = [...s.automationProfiles];
+      const [profile] = updatedProfiles.splice(fromIndex, 1);
+      updatedProfiles.splice(toIndex, 0, profile);
+
+      const updated = { ...s, automationProfiles: updatedProfiles };
       saveSettings(updated);
       return updated;
     });

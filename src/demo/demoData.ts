@@ -17,8 +17,8 @@ export const DEMO_DATA: AppSettings = {
   autoReplyMessages: [
     {
       id: "demo-msg-1",
-      name: "Vacation – Out of Office",
-      subject: "Out of Office – Vacation",
+      name: "Vacation – Out of Office 🌴",
+      subject: "Out of Office – Vacation 🌴",
       body: "<p>Thank you for your email. I am currently unavailable due to <strong>{{appointment.title}}</strong> and will return on <strong>{{appointment.nextWorkingDayAfterEnd}}</strong>.</p><p>For urgent matters, please contact my colleague at <a href='mailto:colleague@example.com'>colleague@example.com</a>.</p><p>Best regards</p>",
       isHtml: true,
       createdAt: now,
@@ -26,8 +26,8 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-msg-2",
-      name: "In a Meeting",
-      subject: "Currently in a Meeting",
+      name: "In a Meeting 🗓️",
+      subject: "Currently in a Meeting 🗓️",
       body: "I am currently in {{appointment.title}} until {{appointment.end}} and will respond to your message as soon as possible. If urgent, please call me directly.",
       isHtml: false,
       createdAt: now,
@@ -35,8 +35,8 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-msg-3",
-      name: "Public Holiday",
-      subject: "Public Holiday – Office Closed",
+      name: "Public Holiday 🎉",
+      subject: "Public Holiday – Office Closed 🎉",
       body: "<p>Our office is closed due to {{appointment.title}}. We will be back in the office on {{appointment.nextWorkingDayAfterEnd}}.</p><p>Thank you for your understanding.</p>",
       isHtml: true,
       createdAt: now,
@@ -44,8 +44,8 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-msg-4",
-      name: "Training – Teams only",
-      subject: "In Training",
+      name: "Training – Teams only 🎓",
+      subject: "In Training 🎓",
       body: "I am in {{rule.match}} until {{appointment.end}}. I will respond as soon as possible.",
       isHtml: false,
       createdAt: now,
@@ -53,8 +53,8 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-msg-5",
-      name: "Unterwegs",
-      subject: "Derzeit unterwegs",
+      name: "Unterwegs 🚆",
+      subject: "Derzeit unterwegs 🚆",
       body: "<p>Vielen Dank für Ihre Nachricht. 🚆</p><p>Ich bin derzeit unterwegs ({{appointment.title}}) und nur eingeschränkt erreichbar. Ab {{appointment.nextWorkingDayAfterEnd}} melde ich mich gerne bei Ihnen zurück.</p>",
       isHtml: true,
       createdAt: now,
@@ -64,7 +64,7 @@ export const DEMO_DATA: AppSettings = {
   automationProfiles: [
     {
       id: "demo-profile-1",
-      name: "Vacation Auto-Reply",
+      name: "Vacation Auto-Reply 🌴",
       enabled: true,
       autoReplyMessageId: "demo-msg-1",
       priority: 10,
@@ -98,7 +98,7 @@ export const DEMO_DATA: AppSettings = {
       teamsStatusSettings: {
         enabled: true,
         statusWhenActive: "Away",
-        statusMessageWhenActive: "On vacation – back Monday",
+        statusMessageWhenActive: "On vacation 🌴 – back Monday",
         restoreOnEnd: true,
       },
       createdAt: now,
@@ -106,7 +106,7 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-profile-2",
-      name: "Meeting Reply",
+      name: "Meeting Reply 🗓️",
       enabled: true,
       autoReplyMessageId: "demo-msg-2",
       priority: 50,
@@ -133,7 +133,7 @@ export const DEMO_DATA: AppSettings = {
       teamsStatusSettings: {
         enabled: true,
         statusWhenActive: "DoNotDisturb",
-        statusMessageWhenActive: "In a meeting",
+        statusMessageWhenActive: "In a meeting 🗓️",
         restoreOnEnd: true,
       },
       createdAt: now,
@@ -141,7 +141,7 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-profile-3",
-      name: "Public Holiday",
+      name: "Public Holiday 🎉",
       enabled: false,
       autoReplyMessageId: "demo-msg-3",
       priority: 20,
@@ -175,7 +175,7 @@ export const DEMO_DATA: AppSettings = {
       teamsStatusSettings: {
         enabled: false,
         statusWhenActive: "Away",
-        statusMessageWhenActive: "",
+        statusMessageWhenActive: "Public Holiday 🎉",
         restoreOnEnd: false,
       },
       createdAt: now,
@@ -183,7 +183,7 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-profile-4",
-      name: "Training – Teams status only",
+      name: "Training – Teams status only 🎓",
       enabled: true,
       enableAutoReply: false,
       autoReplyMessageId: "demo-msg-4",
@@ -211,7 +211,7 @@ export const DEMO_DATA: AppSettings = {
       teamsStatusSettings: {
         enabled: true,
         statusWhenActive: "DoNotDisturb",
-        statusMessageWhenActive: "In Training",
+        statusMessageWhenActive: "In Training 🎓",
         restoreOnEnd: true,
       },
       createdAt: now,
@@ -219,7 +219,7 @@ export const DEMO_DATA: AppSettings = {
     },
     {
       id: "demo-profile-5",
-      name: "Unterwegs – Reise, Fahrt oder Flug",
+      name: "Unterwegs – Reise, Fahrt oder Flug 🚆",
       enabled: true,
       autoReplyMessageId: "demo-msg-5",
       priority: 30,
@@ -247,7 +247,7 @@ export const DEMO_DATA: AppSettings = {
       teamsStatusSettings: {
         enabled: true,
         statusWhenActive: "Away",
-        statusMessageWhenActive: "Unterwegs",
+        statusMessageWhenActive: "Unterwegs 🚆",
         restoreOnEnd: true,
       },
       createdAt: now,

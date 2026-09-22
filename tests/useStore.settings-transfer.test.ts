@@ -122,12 +122,15 @@ describe("useStore settings import/export", () => {
     expect(created.autoReplyMessages).toHaveLength(5);
     expect(created.automationProfiles).toHaveLength(5);
     expect(created.autoReplyMessages.map((message) => message.name)).toEqual([
-      "Vacation – Out of Office",
-      "In a Meeting",
-      "Public Holiday",
-      "Training – Teams only",
-      "Traveling",
+      "Vacation – Out of Office 🌴",
+      "In a Meeting 🗓️",
+      "Public Holiday 🎉",
+      "Training – Teams only 🎓",
+      "Traveling ✈️",
     ]);
+    expect(
+      created.automationProfiles.every((profile) => !profile.enabled),
+    ).toBe(true);
     expect(created.hasHandledDefaultRulesPrompt).toBe(true);
 
     useStore.getState().handleDefaultRulesPrompt(true);

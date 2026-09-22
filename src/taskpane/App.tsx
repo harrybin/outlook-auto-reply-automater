@@ -364,8 +364,7 @@ export function App() {
                 <strong>Appointment rules</strong>
                 <ul>
                   <li>
-                    Profile priority: the lowest number wins when more than one
-                    profile matches.
+                    Profile order: the first matching profile in the list wins.
                   </li>
                   <li>
                     Auto-reply: Enables or disables Outlook out-of-office for

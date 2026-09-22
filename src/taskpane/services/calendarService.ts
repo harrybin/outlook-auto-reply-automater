@@ -202,9 +202,7 @@ export function findMatchingAppointments(
   appointments: AppointmentInfo[],
   profiles: AutomationProfile[],
 ): Array<{ appointment: AppointmentInfo; profile: AutomationProfile }> {
-  const enabledProfiles = profiles
-    .filter((p) => p.enabled)
-    .sort((a, b) => a.priority - b.priority);
+  const enabledProfiles = profiles.filter((p) => p.enabled);
 
   const results: Array<{
     appointment: AppointmentInfo;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Button,
   Checkbox,
@@ -162,9 +163,14 @@ export function ProfileList() {
   const messages = useStore((s) => s.autoReplyMessages);
   const addProfile = useStore((s) => s.addProfile);
   const updateProfile = useStore((s) => s.updateProfile);
+  const reorderProfiles = useStore((s) => s.reorderProfiles);
   const deleteProfile = useStore((s) => s.deleteProfile);
 
   const [editing, setEditing] = useState<AutomationProfile | null>(null);
+  const [draggedProfileId, setDraggedProfileId] = useState<string | null>(null);
+  const [dragOverProfileId, setDragOverProfileId] = useState<string | null>(
+    null,
+  );
   const [isNew, setIsNew] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(defaultProfile());
   const [canCreateOutlookMessage, setCanCreateOutlookMessage] = useState(() =>
@@ -302,33 +308,119 @@ export function ProfileList() {
         </p>
       )}
 
-      {profiles.map((p) => {
+      {profiles.map((p, index) => {
         const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
         const canCreateMessage = hasMessage && canCreateOutlookMessage;
+        const isDragging = draggedProfileId === p.id;
+        const isDropTarget = dragOverProfileId === p.id;
+
         return (
-          <div
+          <motion.div
             key={p.id}
+            layout
+            draggable
+            onDragStartCapture={(event) => {
+              setDraggedProfileId(p.id);
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", p.id);
+            }}
+            onDragEndCapture={() => {
+              setDraggedProfileId(null);
+              setDragOverProfileId(null);
+            }}
+            onDragOverCapture={(event) => {
+              event.preventDefault();
+              if (draggedProfileId && draggedProfileId !== p.id) {
+                setDragOverProfileId(p.id);
+              }
+              event.dataTransfer.dropEffect = "move";
+            }}
+            onDropCapture={(event) => {
+              event.preventDefault();
+              if (!draggedProfileId || draggedProfileId === p.id) {
+                return;
+              }
+              reorderProfiles(draggedProfileId, p.id);
+              setDraggedProfileId(null);
+              setDragOverProfileId(null);
+            }}
+            whileHover={
+              isDragging
+                ? undefined
+                : { x: 6, y: -4, scale: 1.02, rotate: -0.2 }
+            }
+            animate={
+              isDropTarget
+                ? {
+                    y: -6,
+                    scale: 1.025,
+                    boxShadow: "0 18px 28px rgba(0,0,0,0.28)",
+                    borderColor: tokens.colorBrandStroke1,
+                  }
+                : { y: 0, scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)" }
+            }
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 18,
+              mass: 0.8,
+            }}
             style={{
-              border: `1px solid ${tokens.colorNeutralStroke2}`,
+              border: `1px solid ${
+                isDropTarget
+                  ? tokens.colorBrandStroke1
+                  : tokens.colorNeutralStroke2
+              }`,
               borderRadius: tokens.borderRadiusMedium,
               padding: tokens.spacingVerticalS,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              cursor: "grab",
+              opacity: isDragging ? 0.75 : 1,
+              boxShadow: isDropTarget ? "0 18px 28px rgba(0,0,0,0.28)" : "none",
             }}
           >
-            <div>
-              <span style={{ fontWeight: "600" }}>{p.name}</span>
-              <span
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: tokens.spacingHorizontalXS,
+              }}
+            >
+              <div
+                aria-label="Drag to reorder profile"
+                title="Drag to reorder"
                 style={{
-                  marginLeft: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 18,
+                  height: 18,
                   color: tokens.colorNeutralForeground3,
-                  fontSize: tokens.fontSizeBase200,
+                  cursor: "grab",
+                  userSelect: "none",
+                  opacity: 0.8,
+                  lineHeight: 1,
+                  fontSize: 16,
+                  letterSpacing: "0.06em",
                 }}
               >
-                Priority {p.priority} · {p.enabled ? "Enabled" : "Disabled"} ·{" "}
-                {p.enableAutoReply !== false ? "Auto-reply" : "Teams only"}
-              </span>
+                ⋮⋮
+              </div>
+              <div>
+                <span style={{ fontWeight: "600" }}>{p.name}</span>
+                <span
+                  style={{
+                    marginLeft: 8,
+                    color: tokens.colorNeutralForeground3,
+                    fontSize: tokens.fontSizeBase200,
+                  }}
+                >
+                  Order {index + 1} · {p.enabled ? "Enabled" : "Disabled"} ·{" "}
+                  {p.enableAutoReply !== false ? "Auto-reply" : "Teams only"}
+                </span>
+              </div>
             </div>
             <div style={{ display: "flex", gap: tokens.spacingHorizontalXS }}>
               <Switch
@@ -358,7 +450,7 @@ export function ProfileList() {
                 onClick={() => deleteProfile(p.id)}
               />
             </div>
-          </div>
+          </motion.div>
         );
       })}
 
@@ -422,15 +514,15 @@ export function ProfileList() {
                   ))}
                 </Dropdown>
               </Field>
-              <Field label="Priority (lower = higher priority)">
-                <Input
-                  type="number"
-                  value={String(draft.priority)}
-                  onChange={(_e, d) =>
-                    setDraft((p) => ({ ...p, priority: Number(d.value) }))
-                  }
-                />
-              </Field>
+              <div
+                style={{
+                  color: tokens.colorNeutralForeground3,
+                  fontSize: tokens.fontSizeBase200,
+                }}
+              >
+                Matching order is taken from the list order. Drag a profile by
+                its grip to change the precedence.
+              </div>
 
               {/* Timing */}
               <fieldset

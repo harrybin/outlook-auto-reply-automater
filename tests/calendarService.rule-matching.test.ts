@@ -4,7 +4,10 @@ import type {
   AutomationProfile,
   KeywordRule,
 } from "@/taskpane/types";
-import { appointmentMatchesProfile } from "@/taskpane/services/calendarService";
+import {
+  appointmentMatchesProfile,
+  findMatchingAppointments,
+} from "@/taskpane/services/calendarService";
 
 function createProfile(rule: KeywordRule): AutomationProfile {
   return {
@@ -156,5 +159,36 @@ describe("appointmentMatchesProfile training preset", () => {
         profile,
       ),
     ).toBe(true);
+  });
+});
+
+describe("findMatchingAppointments list order precedence", () => {
+  it("uses the order of the profile list instead of numeric priority", () => {
+    const firstProfile = createProfile({
+      id: "rule-first",
+      field: "title",
+      operator: "contains",
+      value: "Vacation",
+      caseSensitive: false,
+    });
+    firstProfile.priority = 50;
+
+    const secondProfile = createProfile({
+      id: "rule-second",
+      field: "title",
+      operator: "contains",
+      value: "Vacation",
+      caseSensitive: false,
+    });
+    secondProfile.id = "profile-second";
+    secondProfile.priority = 10;
+
+    const matches = findMatchingAppointments(
+      [APPOINTMENT],
+      [firstProfile, secondProfile],
+    );
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0]?.profile.id).toBe(firstProfile.id);
   });
 });
