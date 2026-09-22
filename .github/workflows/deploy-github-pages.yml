@@ -134,12 +134,14 @@ jobs:
               run: |
                   if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
                     gh release edit "$RELEASE_TAG" \
+                      --target "$GITHUB_SHA" \
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
                     gh release upload "$RELEASE_TAG" manifest.json --clobber
                   else
                     gh release create "$RELEASE_TAG" manifest.json \
+                      --target "$GITHUB_SHA" \
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
