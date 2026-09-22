@@ -28,7 +28,7 @@ jobs:
               run: |
                   package_json=$(
                     gh api "repos/${GITHUB_REPOSITORY}/contents/package.json?ref=${{ github.event.workflow_run.head_sha }}" \
-                      --jq '.content' | base64 --decode
+                      --jq '.content' | tr -d '\n' | base64 --decode
                   )
                   version=$(printf '%s' "$package_json" | jq -r '.version')
                   if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
