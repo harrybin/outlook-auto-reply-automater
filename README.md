@@ -219,34 +219,21 @@ scripts/
 
 ## When Rules Are Applied
 
-Understanding when evaluation happens helps you predict exactly when your auto-reply will turn on, change, or turn off.
+The current implementation stores timing and location settings in your profiles, but it does not yet run an automatic evaluator that turns auto-replies on, off, or between messages for you.
 
 ### Calendar-based rules
 
-Rules are evaluated against your upcoming calendar appointments each time the add-in runs its check. An appointment is considered **active** when the current time falls inside the window defined by the profile's timing settings:
-
-- **Activation**: `appointment start − hoursBeforeAppointment` (default: at the start time)
-- **Deactivation**: `appointment end + hoursAfterAppointment` (default: at the end time)
-
-If the `enableBefore` or `enableAfter` toggles are off the lead/lag time is ignored and the boundary is the appointment's exact start or end time.
+Calendar matching currently checks upcoming appointments whose start time is in the future and evaluates only the profile match rules. The timing settings (`hoursBeforeAppointment`, `hoursAfterAppointment`, `enableBefore`, and `enableAfter`) are saved with the profile, but they are not enforced at runtime yet.
 
 ### Location-based rules
 
-Location conditions (geofence, WiFi network, internet connectivity) are re-evaluated at the interval configured in the **Location Settings** (`pollIntervalSeconds`, default: 60 seconds). The auto-reply can change as soon as the next poll detects a condition change.
+Location settings, including `pollIntervalSeconds`, are persisted in the configuration, but location conditions are not currently polled or applied automatically.
 
 ### When the active reply message may change
 
-The active auto-reply message is updated whenever any of the following events occur:
+At the moment, the active auto-reply message does not change automatically from calendar or location rules. These settings are configuration data only until an evaluator/scheduler is implemented.
 
-| Trigger | Effect |
-|---------|--------|
-| A matching appointment enters its activation window | Auto-reply is **enabled** with the message linked to the matching profile |
-| An appointment's deactivation window expires (or no appointments match) | Auto-reply is **disabled** |
-| A higher-priority profile's appointment becomes active while a lower-priority one is already running | Auto-reply **switches** to the higher-priority profile's message |
-| A location condition changes (geofence, WiFi, connectivity) and matches a location rule | Auto-reply is **enabled or updated** with the message linked to that rule |
-| The location condition is no longer satisfied | Auto-reply reverts to the calendar-based state (on or off) |
-
-> **Tip:** If you have overlapping appointments that could match different profiles, the profile with the **lowest priority number** wins. Check your priority values if the wrong message activates.
+> **Tip:** If multiple profiles could match the same appointment data, the profile with the **lowest priority number** wins in the current matching logic.
 
 ## Technology Stack
 
