@@ -82,3 +82,55 @@ jobs:
             - name: Deploy to GitHub Pages
               id: deployment
               uses: actions/deploy-pages@v4
+
+    release:
+        needs: deploy
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Download manifest artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: outlook-addin-manifest
+                  path: dist/deployment
+
+            - name: Read release version
+              id: version
+              run: echo "value=v$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
+
+            - name: Write release notes
+              run: |
+                  cat <<'EOF' > release-notes.md
+                  ## ⬇️ Install the Add-in
+
+                  The latest production manifest is always available directly from the hosted deployment:
+
+                  [📥 Download manifest.json](https://outlook-auto-reply-automater.harrybin.de/manifest.json)
+
+                  ### How to install in Outlook
+
+                  1. Click the download link above and save `manifest.json` to your computer.
+                  2. Open **Outlook** (desktop or web).
+                  3. Go to **Get Add-ins** / **Apps** (or **Manage Add-ins** in Outlook on the web).
+                  4. Choose **My add-ins** → **Add a custom add-in** → **Add from file…**
+                  5. Select the downloaded `manifest.json`.
+                  6. The **Auto-Reply Automater** add-in will appear in your Outlook ribbon or Apps menu.
+
+                  > **Note:** This hosted manifest is generated from the root `manifest.json` during deployment and points to `https://outlook-auto-reply-automater.harrybin.de` — no local server required.
+                  EOF
+
+            - name: Create or update release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.version.outputs.value }}
+                  name: ${{ steps.version.outputs.value }}
+                  body_path: release-notes.md
+                  files: dist/deployment/manifest.json
+                  fail_on_unmatched_files: true
+                  append_body: false
+                  make_latest: true
