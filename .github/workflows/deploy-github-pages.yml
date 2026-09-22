@@ -139,9 +139,9 @@ jobs:
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
-                    gh release upload "$RELEASE_TAG" 'manifest.json#manifest.json' --clobber
+                    gh release upload "$RELEASE_TAG" manifest.json --clobber
                   else
-                    gh release create "$RELEASE_TAG" 'manifest.json#manifest.json' \
+                    gh release create "$RELEASE_TAG" manifest.json \
                       --target "$GITHUB_SHA" \
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
