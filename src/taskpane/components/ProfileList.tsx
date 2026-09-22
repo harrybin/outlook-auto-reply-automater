@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -165,6 +165,32 @@ export function ProfileList() {
   const [editing, setEditing] = useState<AutomationProfile | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(defaultProfile());
+  const [canCreateOutlookMessage, setCanCreateOutlookMessage] = useState(() =>
+    canCreateOutlookMessageForRule(),
+  );
+
+  useEffect(() => {
+    if (typeof Office === "undefined") {
+      return;
+    }
+
+    let isDisposed = false;
+    const syncComposeCapability = () => {
+      if (!isDisposed) {
+        setCanCreateOutlookMessage(canCreateOutlookMessageForRule());
+      }
+    };
+
+    syncComposeCapability();
+
+    void Office.onReady().then(() => {
+      syncComposeCapability();
+    });
+
+    return () => {
+      isDisposed = true;
+    };
+  }, []);
 
   const openNew = () => {
     setDraft(defaultProfile());
@@ -273,7 +299,7 @@ export function ProfileList() {
 
       {profiles.map((p) => {
         const hasMessage = messages.some((m) => m.id === p.autoReplyMessageId);
-        const canCreateMessage = hasMessage && canCreateOutlookMessageForRule();
+        const canCreateMessage = hasMessage && canCreateOutlookMessage;
         return (
         <div
           key={p.id}

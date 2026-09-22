@@ -33,9 +33,10 @@ Object.defineProperty(window, "localStorage", {
 
 // Mock Office.onReady (Office Add-in initialization)
 window.Office = {
-  onReady: vi.fn((callback) => {
-    // Call immediately with default context
-    callback({ host: "Outlook", platform: "Web" } as any);
+  onReady: vi.fn((callback?: (info: unknown) => void) => {
+    const info = { host: "Outlook", platform: "Web" } as any;
+    callback?.(info);
+    return Promise.resolve(info);
   }),
   context: {
     mailbox: {
