@@ -85,7 +85,7 @@ jobs:
 
     release:
         needs: deploy
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && needs.deploy.result == 'success'
         runs-on: ubuntu-latest
         permissions:
             contents: write
