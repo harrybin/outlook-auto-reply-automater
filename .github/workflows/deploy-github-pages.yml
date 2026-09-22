@@ -111,9 +111,10 @@ jobs:
                   cat <<'EOF' > release-notes.md
                   ## ⬇️ Install the Add-in
 
-                  The latest production manifest is always available directly from the hosted deployment:
+                  The latest production manifest is available from both the hosted deployment and this release asset:
 
-                  [📥 Download manifest.json](https://outlook-auto-reply-automater.harrybin.de/manifest.json)
+                  - [📥 Download manifest.json (hosted)](https://outlook-auto-reply-automater.harrybin.de/manifest.json)
+                  - [📦 Download manifest.json (release asset)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.value }}/manifest.json)
 
                   ### How to install in Outlook
 
@@ -138,9 +139,9 @@ jobs:
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
                       --latest
-                    gh release upload "$RELEASE_TAG" manifest.json --clobber
+                    gh release upload "$RELEASE_TAG" 'manifest.json#manifest.json' --clobber
                   else
-                    gh release create "$RELEASE_TAG" manifest.json \
+                    gh release create "$RELEASE_TAG" 'manifest.json#manifest.json' \
                       --target "$GITHUB_SHA" \
                       --title "$RELEASE_TAG" \
                       --notes-file release-notes.md \
