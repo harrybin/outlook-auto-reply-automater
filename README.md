@@ -264,23 +264,30 @@ scripts/
    - Internal, external, or combined auto-reply recipients
 3. **Configure timing** – Optionally activate the auto-reply before an appointment starts and deactivate it after it ends, with configurable hour offsets for both.
 4. **Set priorities** – When multiple profiles match, the one with the lowest priority number wins.
-5. **Let it run** – The add-in monitors your calendar and automatically enables/disables your Outlook auto-reply based on your configured rules.
+5. **Let it run** – Run the independent Windows automation runner so rules continue to apply when the Outlook task pane is closed.
 
 ## When Rules Are Applied
 
-The current implementation stores timing and location settings in your profiles, but it does not yet run an automatic evaluator that turns auto-replies on, off, or between messages for you.
+The task pane is configuration UI only. The independent Windows runner (`npm run runner`) evaluates rules immediately and then polls every 60 seconds by default. It runs outside Outlook's task pane and can remain active for the whole Windows session.
+
+To use it:
+
+1. Export settings from the task pane and save the JSON as `%APPDATA%\outlook-auto-reply-automater\settings.json`.
+2. Set `AAD_CLIENT_ID` (and optionally `AAD_TENANT_ID`) in the runner's environment. The app registration must allow public-client device-code flow and grant `User.Read`, `Calendars.Read`, `MailboxSettings.ReadWrite`, and `Presence.ReadWrite`.
+3. Run `npm run runner` once and complete the device-code sign-in.
+4. Install the logon task with `npm run runner:install`. Use `npm run runner:status` and `npm run runner:uninstall` to manage it.
 
 ### Calendar-based rules
 
-Calendar matching currently checks upcoming appointments whose start time is in the future and evaluates only the profile match rules. The timing settings (`hoursBeforeAppointment`, `hoursAfterAppointment`, `enableBefore`, and `enableAfter`) are saved with the profile, but they are not enforced at runtime yet.
+Calendar matching considers events from the previous 24 hours through the next 24 hours. A matching profile is active from its appointment start, optionally shifted earlier by `hoursBeforeAppointment`, until its appointment end, optionally shifted later by `hoursAfterAppointment`. The first matching profile in the list wins.
 
 ### Location-based rules
 
-Location settings, including `pollIntervalSeconds`, are persisted in the configuration, but location conditions are not currently polled or applied automatically.
+The local runner currently applies calendar profiles. Browser-only location signals (geofence and Wi-Fi) are not available to the Node process; no-internet can be added separately using the runner host's network state.
 
 ### When the active reply message may change
 
-At the moment, the active auto-reply message does not change automatically from calendar or location rules. These settings are configuration data only until an evaluator/scheduler is implemented.
+When the desired rule changes, the runner disables the previously managed Outlook auto-reply, clears the managed Teams presence when configured to restore it, and applies the new message/status. When no rule matches, it clears the managed state. It avoids repeating Graph writes when the active rule has not changed.
 
 > **Tip:** If multiple profiles could match the same appointment data, the profile with the **lowest priority number** wins in the current matching logic.
 

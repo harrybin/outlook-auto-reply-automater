@@ -24,6 +24,10 @@
     "version:bump:major": "node scripts/bump-version.mjs --major",
     "start": "office-addin-debugging start manifest.json --dev-server \"npm run dev\" --dev-server-port 3000",
     "stop": "office-addin-debugging stop manifest.json",
+    "runner": "node scripts/automation-runner.mjs",
+    "runner:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-automation-runner-task.ps1 -StartNow",
+    "runner:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-automation-runner-task.ps1 -Uninstall",
+    "runner:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-automation-runner-task.ps1 -Status",
     "startup:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-startup-task.ps1 -StartNow",
     "startup:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-startup-task.ps1 -Uninstall",
     "startup:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-startup-task.ps1 -Status",
@@ -38,6 +42,7 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^5.13.0",
+    "@azure/msal-node": "^3.7.1",
     "@fluentui/react-components": "^9.74.1",
     "@fluentui/react-icons": "^2.0.278",
     "@microsoft/microsoft-graph-client": "^3.0.7",
