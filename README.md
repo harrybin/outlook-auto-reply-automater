@@ -24,6 +24,7 @@ The latest production manifest is always available directly from the hosted depl
 ## Features
 
 - **Calendar-based automation** – Trigger auto-reply messages based on appointment keywords, duration, busy status, and categories.
+- **Recipient targeting** – Send Outlook auto-replies to internal users, external users, or both, with duration-based safety recommendations.
 - **Ready-to-use replies** – Includes preconfigured messages and matching rules for travel, training, and customer visits.
 - **Flexible matching rules** – Match appointments by title, body, location, organizer, or category using operators like contains, startsWith, endsWith, equals, and regex.
 - **Timing control** – Configure auto-reply to activate hours before an appointment and deactivate hours after it ends.
@@ -68,6 +69,44 @@ npm run start
 
 This validates the manifest and launches Outlook with the add-in sideloaded against `https://localhost:3000`.
 
+### Keeping the Local Server Running (Windows Startup)
+
+The root [`manifest.json`](manifest.json) points at `https://localhost:3000`, so a sideloaded add-in only works while that dev server is running. To start it automatically at every logon:
+
+```powershell
+npm run startup:install
+```
+
+This registers a per-user Windows scheduled task named `OutlookAutoReplyAutomater-DevServer` that:
+
+- Starts [`scripts/start-addin-server.ps1`](scripts/start-addin-server.ps1) hidden, 30 seconds after logon.
+- Binds Vite to port 3000 with `--strictPort`, so the add-in URL never silently shifts to another port.
+- Exits quietly when port 3000 is already served, so it never conflicts with a manual `npm run dev`.
+- Installs dependencies automatically if `node_modules` is missing, and warns when the local HTTPS certificate is untrusted.
+- Restarts up to three times if the server crashes, and runs without an execution time limit.
+- Logs to `%LOCALAPPDATA%\outlook-auto-reply-automater\logs\dev-server.log` (rotated at 5 MB).
+
+Administrator rights are not required. Manage the task with:
+
+| Command | Description |
+|---------|-------------|
+| `npm run startup:install` | Register the logon task and start it immediately |
+| `npm run startup:status` | Show task state, last result, and whether port 3000 is listening |
+| `npm run startup:start` | Start the server now without logging off |
+| `npm run startup:stop` | Stop the running server |
+| `npm run startup:uninstall` | Remove the task so the server no longer starts at logon |
+| `npm run startup:run` | Run the server in the foreground for troubleshooting |
+
+To use a different port, pass it through to the install script and update `manifest.json` to match:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-startup-task.ps1 -Port 3000 -DelaySeconds 60 -StartNow
+```
+
+> **Note:** Run `npx office-addin-dev-certs install` once before relying on the startup task. Without a trusted certificate, Outlook refuses to load the task pane even though the server is reachable.
+>
+> **Tip:** If you prefer not to depend on a local server, install the hosted production manifest described at the top of this file instead.
+
 ## How to Use the Extension
 
 After sideloading, use this flow to configure and run automation:
@@ -101,9 +140,10 @@ After sideloading, use this flow to configure and run automation:
 
 3. **Create an automation profile**
     - Link the profile to one of your message templates.
+    - Choose whether Outlook should reply to internal users, external users, or both.
     - The initial configuration includes profiles that recognize `Reise`, `Training`, and `außer Haus beim Kunden` in the appointment title. Training requires a minimum duration of four hours, so multi-day events also match.
     - Add matching rules for appointment fields such as title, location, organizer, or categories.
-    - Optionally constrain by busy status, all-day flag, and minimum duration.
+    - Optionally constrain by busy status, all-day flag, and minimum or maximum duration in hours. Both limits can be set together.
 
 4. **Set timing and priority**
     - Configure how many hours before an event to enable auto-reply.
@@ -140,6 +180,12 @@ After sideloading, use this flow to configure and run automation:
 | `npm run test:coverage` | Run tests with coverage report |
 | `npm run type-check` | Run TypeScript type checking without emitting |
 | `npm run validate` | Validate the Office add-in manifest |
+| `npm run startup:install` | Register a Windows logon task that keeps `https://localhost:3000` running |
+| `npm run startup:status` | Show the startup task state and whether port 3000 is listening |
+| `npm run startup:start` | Start the local server via the scheduled task |
+| `npm run startup:stop` | Stop the local server started by the scheduled task |
+| `npm run startup:uninstall` | Remove the Windows logon task |
+| `npm run startup:run` | Run the local server in the foreground (troubleshooting) |
 | `npm run pack -- https://your-host.example.com/app` | Create a Windows/Mac deployment bundle in `dist/deployment` |
 | `npm run pack:manifest` | Export the raw manifest without building a deployment bundle |
 | `npm run version:bump` | Bump the patch version |
@@ -215,6 +261,7 @@ scripts/
    - Appointment duration thresholds
    - Calendar busy status (free, tentative, busy, out-of-office, working elsewhere)
    - All-day event detection
+   - Internal, external, or combined auto-reply recipients
 3. **Configure timing** – Optionally activate the auto-reply before an appointment starts and deactivate it after it ends, with configurable hour offsets for both.
 4. **Set priorities** – When multiple profiles match, the one with the lowest priority number wins.
 5. **Let it run** – The add-in monitors your calendar and automatically enables/disables your Outlook auto-reply based on your configured rules.

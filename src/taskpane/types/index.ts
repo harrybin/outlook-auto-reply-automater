@@ -43,8 +43,8 @@ export interface KeywordRule {
 
 export interface DurationRule {
   enabled: boolean;
-  minMinutes?: number;
-  maxMinutes?: number;
+  minHours?: number;
+  maxHours?: number;
 }
 
 export interface BusyStatusRule {
@@ -67,6 +67,8 @@ export interface TimingSettings {
   enableAfter: boolean;
   hoursAfterAppointment: number;
 }
+
+export type AutoReplyAudience = "internal" | "external" | "both";
 
 // ─── Location / Network Settings ─────────────────────────────────────────────
 
@@ -135,6 +137,8 @@ export interface AutomationProfile {
   enabled: boolean;
   /** Defaults to true for profiles created before this setting existed. */
   enableAutoReply?: boolean;
+  /** Defaults to both for profiles created before recipient targeting existed. */
+  autoReplyAudience?: AutoReplyAudience;
   autoReplyMessageId: string;
   matchRules: AppointmentMatchRules;
   timingSettings: TimingSettings;

@@ -387,7 +387,7 @@ export function App() {
                     Operators: contains, starts with, ends with, equals, and
                     regex. Regex can be entered as <code>/pattern/i</code>.
                   </li>
-                  <li>Duration: minimum and maximum duration in minutes.</li>
+                  <li>Duration: minimum and maximum duration in hours.</li>
                   <li>
                     Busy status: free, tentative, busy, out of office, or
                     working elsewhere.

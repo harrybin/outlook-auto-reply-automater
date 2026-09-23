@@ -3,8 +3,9 @@ import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildCopilotDraftForRule,
-  ProfileList,
   canCreateOutlookMessageForRule,
+  getProfileRecommendation,
+  ProfileList,
 } from "@/taskpane/components/ProfileList";
 import type { AutoReplyMessage, AutomationProfile } from "@/taskpane/types";
 import { useStore } from "@/taskpane/useStore";
@@ -28,7 +29,7 @@ const PROFILE: AutomationProfile = {
         caseSensitive: false,
       },
     ],
-    durationRule: { enabled: true, minMinutes: 30, maxMinutes: 120 },
+    durationRule: { enabled: true, minHours: 0.5, maxHours: 2 },
     busyStatusRule: { enabled: true, statuses: ["busy", "outOfOffice"] },
   },
   timingSettings: {
@@ -63,9 +64,62 @@ describe("buildCopilotDraftForRule", () => {
     expect(draft.htmlBody).toContain("Copilot context for Outlook");
     expect(draft.htmlBody).toContain("OOO &lt;rule&gt;");
     expect(draft.htmlBody).toContain('title contains "Vacation"');
-    expect(draft.htmlBody).toContain("Duration: 30-120 minutes");
+    expect(draft.htmlBody).toContain("Duration: 0.5-2 hours");
     expect(draft.htmlBody).toContain("Busy status: busy, outOfOffice");
     expect(draft.htmlBody).toContain("<p>Thanks for your message.</p>");
+  });
+
+  describe("getProfileRecommendation", () => {
+    it("suggests Teams-only behavior when no duration filter is set", () => {
+      expect(
+        getProfileRecommendation({
+          ...PROFILE,
+          matchRules: {
+            ...PROFILE.matchRules,
+            durationRule: { enabled: false },
+          },
+        }),
+      ).toBe("teamsOnly");
+    });
+
+    it("suggests internal replies for appointments shorter than eight hours", () => {
+      expect(
+        getProfileRecommendation({
+          ...PROFILE,
+          autoReplyAudience: "both",
+          matchRules: {
+            ...PROFILE.matchRules,
+            durationRule: { enabled: true, maxHours: 479 / 60 },
+          },
+        }),
+      ).toBe("internalOnly");
+    });
+
+    it("suggests an eight-hour minimum for external replies", () => {
+      expect(
+        getProfileRecommendation({
+          ...PROFILE,
+          autoReplyAudience: "external",
+          matchRules: {
+            ...PROFILE.matchRules,
+            durationRule: { enabled: true, minHours: 1 },
+          },
+        }),
+      ).toBe("minimumEightHours");
+    });
+
+    it("does not suggest changes for long internal-and-external replies", () => {
+      expect(
+        getProfileRecommendation({
+          ...PROFILE,
+          autoReplyAudience: "both",
+          matchRules: {
+            ...PROFILE.matchRules,
+            durationRule: { enabled: true, minHours: 8 },
+          },
+        }),
+      ).toBeNull();
+    });
   });
 
   it("escapes and preserves line breaks for plain text message bodies", () => {

@@ -9,6 +9,7 @@ import type {
   AppointmentBusyStatus,
   AppointmentMatchField,
   AppointmentMatchOperator,
+  AutoReplyAudience,
   AutoReplyMessage,
   AutomationProfile,
   LocationRule,
@@ -92,6 +93,12 @@ const TEAMS_STATUSES: TeamsPresenceStatus[] = [
   "BeRightBack",
   "Away",
   "Offline",
+];
+
+const AUTO_REPLY_AUDIENCES: AutoReplyAudience[] = [
+  "internal",
+  "external",
+  "both",
 ];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -270,6 +277,8 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
     isRecord(value.matchRules) && isRecord(value.matchRules.durationRule)
       ? value.matchRules.durationRule
       : {};
+  const legacyMinMinutes = asOptionalNumber(durationRule.minMinutes);
+  const legacyMaxMinutes = asOptionalNumber(durationRule.maxMinutes);
   const busyStatusRule =
     isRecord(value.matchRules) && isRecord(value.matchRules.busyStatusRule)
       ? value.matchRules.busyStatusRule
@@ -296,6 +305,11 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
     name: value.name,
     enabled: asBoolean(value.enabled, true),
     enableAutoReply: asBoolean(value.enableAutoReply, true),
+    autoReplyAudience: asOneOf(
+      value.autoReplyAudience,
+      AUTO_REPLY_AUDIENCES,
+      "both",
+    ),
     autoReplyMessageId: value.autoReplyMessageId,
     priority: asNonNegativeNumber(value.priority, 50),
     createdAt: asString(value.createdAt, now()),
@@ -304,8 +318,12 @@ function normalizeProfile(value: unknown): AutomationProfile | null {
       keywordRules,
       durationRule: {
         enabled: asBoolean(durationRule.enabled, false),
-        minMinutes: asOptionalNumber(durationRule.minMinutes),
-        maxMinutes: asOptionalNumber(durationRule.maxMinutes),
+        minHours:
+          asOptionalNumber(durationRule.minHours) ??
+          (legacyMinMinutes !== undefined ? legacyMinMinutes / 60 : undefined),
+        maxHours:
+          asOptionalNumber(durationRule.maxHours) ??
+          (legacyMaxMinutes !== undefined ? legacyMaxMinutes / 60 : undefined),
       },
       busyStatusRule: {
         enabled: asBoolean(busyStatusRule.enabled, false),

@@ -14,8 +14,11 @@ import {
   Dropdown,
   Field,
   Input,
+  makeStyles,
   Option,
+  shorthands,
   Switch,
+  Text,
   tokens,
 } from "@fluentui/react-components";
 import {
@@ -29,6 +32,7 @@ import type {
   AppointmentBusyStatus,
   AppointmentMatchField,
   AppointmentMatchOperator,
+  AutoReplyAudience,
   KeywordRule,
 } from "../types";
 import { useStore } from "../useStore";
@@ -37,6 +41,189 @@ import { getAccount, getGraphClient, signIn } from "../services/authService";
 import { clearTeamsPresence, setTeamsPresence } from "../services/teamsService";
 
 const TEAMS_STATUS_TEST_DURATION_MS = 3000;
+
+const useStyles = makeStyles({
+  dialogSurface: {
+    width: "calc(100vw - 32px)",
+    maxWidth: "960px",
+    maxHeight: "calc(100vh - 32px)",
+    overflow: "visible",
+  },
+  dialogBody: {
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    overflow: "visible",
+  },
+  dialogContent: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalL,
+    paddingTop: tokens.spacingVerticalS,
+    overflowX: "visible",
+    overflowY: "auto",
+  },
+  profileName: {
+    paddingBottom: tokens.spacingVerticalXS,
+  },
+  section: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalM,
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
+    ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    ...shorthands.padding(
+      tokens.spacingVerticalL,
+      tokens.spacingHorizontalL,
+    ),
+  },
+  rulesSection: {
+    order: 1,
+    borderTopColor: tokens.colorBrandStroke1,
+    borderTopWidth: "3px",
+  },
+  emailSection: {
+    order: 2,
+    borderTopColor: tokens.colorPaletteGreenBorder1,
+    borderTopWidth: "3px",
+  },
+  teamsSection: {
+    order: 3,
+    borderTopColor: tokens.colorPalettePurpleBorderActive,
+    borderTopWidth: "3px",
+  },
+  sectionHeader: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalXXS,
+  },
+  sectionTitle: {
+    fontSize: tokens.fontSizeBase400,
+    fontWeight: tokens.fontWeightSemibold,
+    lineHeight: tokens.lineHeightBase400,
+  },
+  sectionDescription: {
+    color: tokens.colorNeutralForeground3,
+  },
+  sectionContent: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalM,
+  },
+  subsection: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalS,
+    backgroundColor: tokens.colorNeutralBackground1,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.padding(
+      tokens.spacingVerticalM,
+      tokens.spacingHorizontalM,
+    ),
+  },
+  subsectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: tokens.spacingHorizontalM,
+    flexWrap: "wrap",
+  },
+  subsectionTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  keywordList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalS,
+  },
+  keywordRow: {
+    position: "relative",
+    display: "grid",
+    gridTemplateColumns:
+      "minmax(120px, 0.8fr) minmax(140px, 0.9fr) minmax(240px, 2fr) 32px",
+    gap: tokens.spacingHorizontalS,
+    alignItems: "end",
+    backgroundColor: tokens.colorNeutralBackground1,
+    ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.padding(
+      tokens.spacingVerticalS,
+      tokens.spacingHorizontalS,
+    ),
+    "@media (max-width: 720px)": {
+      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) 32px",
+    },
+    "@media (max-width: 500px)": {
+      gridTemplateColumns: "minmax(0, 1fr) 32px",
+    },
+  },
+  keywordField: {
+    minWidth: 0,
+  },
+  keywordValue: {
+    minWidth: 0,
+    "@media (max-width: 720px)": {
+      gridColumn: "1 / 3",
+    },
+    "@media (max-width: 500px)": {
+      gridColumn: "1",
+    },
+  },
+  deleteRuleButton: {
+    color: tokens.colorPaletteRedForeground1,
+  },
+  addRuleButton: {
+    width: "100%",
+    ...shorthands.borderStyle("dashed"),
+    backgroundColor: tokens.colorSubtleBackground,
+  },
+  twoColumnGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: tokens.spacingHorizontalM,
+    "@media (max-width: 560px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  statusGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: tokens.spacingHorizontalXS,
+  },
+  helperText: {
+    color: tokens.colorNeutralForeground2,
+    lineHeight: tokens.lineHeightBase300,
+  },
+  recommendation: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: tokens.spacingHorizontalM,
+    backgroundColor: tokens.colorNeutralBackground3,
+    borderLeft: `4px solid ${tokens.colorBrandStroke1}`,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.padding(
+      tokens.spacingVerticalS,
+      tokens.spacingHorizontalM,
+    ),
+    marginTop: tokens.spacingVerticalXS,
+    "@media (max-width: 560px)": {
+      alignItems: "stretch",
+      flexDirection: "column",
+    },
+  },
+  dialogActions: {
+    position: "sticky",
+    bottom: 0,
+    zIndex: 1,
+    backgroundColor: tokens.colorNeutralBackground1,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    paddingTop: tokens.spacingVerticalM,
+    justifyContent: "flex-end",
+    boxShadow: tokens.shadow4,
+  },
+});
 
 const BUSY_STATUSES: AppointmentBusyStatus[] = [
   "free",
@@ -60,7 +247,36 @@ const OPERATORS: AppointmentMatchOperator[] = [
   "regex",
 ];
 
+const FIELD_LABELS: Record<AppointmentMatchField, string> = {
+  title: "Title",
+  body: "Body",
+  location: "Location",
+  organizer: "Organizer",
+  category: "Category",
+};
+
+const OPERATOR_LABELS: Record<AppointmentMatchOperator, string> = {
+  contains: "Contains",
+  startsWith: "Starts with",
+  endsWith: "Ends with",
+  equals: "Equals",
+  regex: "Regular expression",
+};
+
+const BUSY_STATUS_LABELS: Record<AppointmentBusyStatus, string> = {
+  free: "Free",
+  tentative: "Tentative",
+  busy: "Busy",
+  outOfOffice: "Out of office",
+  workingElsewhere: "Working elsewhere",
+};
+
 type ProfileDraft = Omit<AutomationProfile, "id" | "createdAt" | "updatedAt">;
+
+export type ProfileRecommendation =
+  | "teamsOnly"
+  | "internalOnly"
+  | "minimumEightHours";
 
 interface OutlookMessageDraft {
   subject: string;
@@ -76,6 +292,7 @@ function defaultProfile(): ProfileDraft {
     name: "",
     enabled: true,
     enableAutoReply: true,
+    autoReplyAudience: "both",
     autoReplyMessageId: "",
     priority: 50,
     matchRules: {
@@ -97,6 +314,51 @@ function defaultProfile(): ProfileDraft {
       restoreOnEnd: true,
     },
   };
+}
+
+export function getProfileRecommendation(
+  profile: ProfileDraft,
+): ProfileRecommendation | null {
+  if (profile.enableAutoReply === false) {
+    return null;
+  }
+
+  const duration = profile.matchRules.durationRule;
+  if (!duration.enabled) {
+    return "teamsOnly";
+  }
+
+  if (
+    duration.maxHours !== undefined &&
+    duration.maxHours < 8 &&
+    profile.autoReplyAudience !== "internal"
+  ) {
+    return "internalOnly";
+  }
+
+  if (
+    profile.autoReplyAudience !== "internal" &&
+    (duration.minHours === undefined || duration.minHours < 8)
+  ) {
+    return "minimumEightHours";
+  }
+
+  return null;
+}
+
+function getAutoReplySummary(profile: AutomationProfile): string {
+  if (profile.enableAutoReply === false) {
+    return "Teams only";
+  }
+
+  switch (profile.autoReplyAudience) {
+    case "internal":
+      return "Internal auto-reply";
+    case "external":
+      return "External auto-reply";
+    default:
+      return "Internal + external auto-reply";
+  }
 }
 
 function escapeHtml(value: string): string {
@@ -131,7 +393,7 @@ export function buildCopilotDraftForRule(
   const ruleSummary = [
     keywordRules ? `Keyword rules: ${keywordRules}` : null,
     hasDurationFilter
-      ? `Duration: ${profile.matchRules.durationRule.minMinutes ?? 0}-${profile.matchRules.durationRule.maxMinutes ?? "any"} minutes`
+      ? `Duration: ${profile.matchRules.durationRule.minHours ?? 0}-${profile.matchRules.durationRule.maxHours ?? "any"} hours`
       : null,
     hasBusyStatusFilter
       ? `Busy status: ${profile.matchRules.busyStatusRule.statuses.join(", ")}`
@@ -163,6 +425,7 @@ export function canCreateOutlookMessageForRule(): boolean {
 }
 
 export function ProfileList() {
+  const classes = useStyles();
   const profiles = useStore((s) => s.automationProfiles);
   const messages = useStore((s) => s.autoReplyMessages);
   const addProfile = useStore((s) => s.addProfile);
@@ -317,6 +580,43 @@ export function ProfileList() {
     mailbox.displayNewMessageForm(buildCopilotDraftForRule(profile, message));
   };
 
+  const recommendation = getProfileRecommendation(draft);
+  const applyRecommendation = () => {
+    if (recommendation === "teamsOnly") {
+      setDraft((profile) => ({
+        ...profile,
+        enableAutoReply: false,
+        teamsStatusSettings: {
+          ...profile.teamsStatusSettings,
+          enabled: true,
+        },
+      }));
+      return;
+    }
+
+    if (recommendation === "internalOnly") {
+      setDraft((profile) => ({
+        ...profile,
+        autoReplyAudience: "internal",
+      }));
+      return;
+    }
+
+    if (recommendation === "minimumEightHours") {
+      setDraft((profile) => ({
+        ...profile,
+        matchRules: {
+          ...profile.matchRules,
+          durationRule: {
+            ...profile.matchRules.durationRule,
+            enabled: true,
+            minHours: 8,
+          },
+        },
+      }));
+    }
+  };
+
   const isOpen = isNew || editing !== null;
 
   return (
@@ -438,7 +738,7 @@ export function ProfileList() {
                   }}
                 >
                   Order {index + 1} · {p.enabled ? "Enabled" : "Disabled"} ·{" "}
-                  {p.enableAutoReply !== false ? "Auto-reply" : "Teams only"}
+                  {getAutoReplySummary(p)}
                 </span>
               </div>
             </div>
@@ -484,25 +784,18 @@ export function ProfileList() {
           }
         }}
       >
-        <DialogSurface
-          style={{
-            width: "calc(100vw - 32px)",
-            maxWidth: "none",
-          }}
-        >
-          <DialogBody>
+        <DialogSurface className={classes.dialogSurface}>
+          <DialogBody className={classes.dialogBody}>
             <DialogTitle>
               {isNew ? "New Automation Profile" : "Edit Automation Profile"}
             </DialogTitle>
-            <DialogContent
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: tokens.spacingVerticalM,
-              }}
-            >
+            <DialogContent className={classes.dialogContent}>
               {/* Basic settings */}
-              <Field label="Profile name" required>
+              <Field
+                className={classes.profileName}
+                label="Profile name"
+                required
+              >
                 <Input
                   value={draft.name}
                   onChange={(_e, d) =>
@@ -510,151 +803,175 @@ export function ProfileList() {
                   }
                 />
               </Field>
-              <Switch
-                checked={draft.enableAutoReply !== false}
-                onChange={(_e, data) =>
-                  setDraft((profile) => ({
-                    ...profile,
-                    enableAutoReply: data.checked,
-                  }))
-                }
-                label="Enable Outlook auto-reply"
-              />
-              <Field label="Auto-reply message" required>
-                <Dropdown
-                  value={
-                    messages.find((m) => m.id === draft.autoReplyMessageId)
-                      ?.name ?? "Select…"
-                  }
-                  onOptionSelect={(_e, d) =>
-                    setDraft((p) => ({
-                      ...p,
-                      autoReplyMessageId: d.optionValue as string,
-                    }))
-                  }
-                >
-                  {messages.map((m) => (
-                    <Option key={m.id} value={m.id}>
-                      {m.name}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <div
-                style={{
-                  color: tokens.colorNeutralForeground3,
-                  fontSize: tokens.fontSizeBase200,
-                }}
-              >
-                Matching order is taken from the list order. Drag a profile by
-                its grip to change the precedence.
-              </div>
-
-              {/* Timing */}
               <fieldset
-                style={{
-                  border: `1px solid ${tokens.colorNeutralStroke2}`,
-                  borderRadius: tokens.borderRadiusMedium,
-                  padding: tokens.spacingVerticalS,
-                }}
+                className={`${classes.section} ${classes.emailSection}`}
               >
-                <legend style={{ fontWeight: "600" }}>Timing</legend>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: tokens.spacingVerticalS,
-                  }}
-                >
+                <legend className={classes.sectionTitle}>
+                  Email auto-reply
+                </legend>
+                <div className={classes.sectionHeader}>
+                  <Text size={200} className={classes.sectionDescription}>
+                    Choose who receives an Outlook reply and when it stays
+                    active.
+                  </Text>
+                </div>
+                <div className={classes.sectionContent}>
                   <Switch
-                    checked={draft.timingSettings.enableBefore}
-                    onChange={(_e, d) =>
-                      setDraft((p) => ({
-                        ...p,
-                        timingSettings: {
-                          ...p.timingSettings,
-                          enableBefore: d.checked,
-                        },
+                    checked={draft.enableAutoReply !== false}
+                    onChange={(_e, data) =>
+                      setDraft((profile) => ({
+                        ...profile,
+                        enableAutoReply: data.checked,
                       }))
                     }
-                    label="Activate before appointment"
+                    label="Enable Outlook auto-reply"
                   />
-                  {draft.timingSettings.enableBefore && (
-                    <Field label="Hours before appointment">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={String(
-                          draft.timingSettings.hoursBeforeAppointment,
-                        )}
-                        onChange={(_e, d) =>
-                          setDraft((p) => ({
-                            ...p,
-                            timingSettings: {
-                              ...p.timingSettings,
-                              hoursBeforeAppointment: Number(d.value),
-                            },
-                          }))
-                        }
-                      />
-                    </Field>
+                  {draft.enableAutoReply !== false && (
+                    <div className={classes.subsection}>
+                      <Field label="Recipients">
+                        <Dropdown
+                          inlinePopup
+                          value={
+                            draft.autoReplyAudience === "internal"
+                              ? "Internal users only"
+                              : draft.autoReplyAudience === "external"
+                                ? "External users only"
+                                : "Internal and external users"
+                          }
+                          onOptionSelect={(_e, data) =>
+                            setDraft((profile) => ({
+                              ...profile,
+                              autoReplyAudience:
+                                data.optionValue as AutoReplyAudience,
+                            }))
+                          }
+                        >
+                          <Option value="internal">Internal users only</Option>
+                          <Option value="external">External users only</Option>
+                          <Option value="both">
+                            Internal and external users
+                          </Option>
+                        </Dropdown>
+                      </Field>
+                      <Field label="Auto-reply message" required>
+                        <Dropdown
+                          inlinePopup
+                          value={
+                            messages.find(
+                              (m) => m.id === draft.autoReplyMessageId,
+                            )?.name ?? "Select…"
+                          }
+                          onOptionSelect={(_e, d) =>
+                            setDraft((p) => ({
+                              ...p,
+                              autoReplyMessageId: d.optionValue as string,
+                            }))
+                          }
+                        >
+                          {messages.map((m) => (
+                            <Option key={m.id} value={m.id}>
+                              {m.name}
+                            </Option>
+                          ))}
+                        </Dropdown>
+                      </Field>
+                    </div>
                   )}
-                  <Switch
-                    checked={draft.timingSettings.enableAfter}
-                    onChange={(_e, d) =>
-                      setDraft((p) => ({
-                        ...p,
-                        timingSettings: {
-                          ...p.timingSettings,
-                          enableAfter: d.checked,
-                        },
-                      }))
-                    }
-                    label="Keep active after appointment"
-                  />
-                  {draft.timingSettings.enableAfter && (
-                    <Field label="Hours after appointment">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={String(
-                          draft.timingSettings.hoursAfterAppointment,
-                        )}
-                        onChange={(_e, d) =>
-                          setDraft((p) => ({
-                            ...p,
-                            timingSettings: {
-                              ...p.timingSettings,
-                              hoursAfterAppointment: Number(d.value),
-                            },
-                          }))
-                        }
-                      />
-                    </Field>
-                  )}
+                  <div className={classes.subsection}>
+                    <div className={classes.subsectionHeader}>
+                      <Text className={classes.subsectionTitle}>Timing</Text>
+                      <Text size={200} className={classes.sectionDescription}>
+                        Optional offsets around the appointment
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={draft.timingSettings.enableBefore}
+                      onChange={(_e, d) =>
+                        setDraft((p) => ({
+                          ...p,
+                          timingSettings: {
+                            ...p.timingSettings,
+                            enableBefore: d.checked,
+                          },
+                        }))
+                      }
+                      label="Activate before appointment"
+                    />
+                    {draft.timingSettings.enableBefore && (
+                      <Field label="Hours before appointment">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.25"
+                          value={String(
+                            draft.timingSettings.hoursBeforeAppointment,
+                          )}
+                          onChange={(_e, d) =>
+                            setDraft((p) => ({
+                              ...p,
+                              timingSettings: {
+                                ...p.timingSettings,
+                                hoursBeforeAppointment: Number(d.value),
+                              },
+                            }))
+                          }
+                        />
+                      </Field>
+                    )}
+                    <Switch
+                      checked={draft.timingSettings.enableAfter}
+                      onChange={(_e, d) =>
+                        setDraft((p) => ({
+                          ...p,
+                          timingSettings: {
+                            ...p.timingSettings,
+                            enableAfter: d.checked,
+                          },
+                        }))
+                      }
+                      label="Keep active after appointment"
+                    />
+                    {draft.timingSettings.enableAfter && (
+                      <Field label="Hours after appointment">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.25"
+                          value={String(
+                            draft.timingSettings.hoursAfterAppointment,
+                          )}
+                          onChange={(_e, d) =>
+                            setDraft((p) => ({
+                              ...p,
+                              timingSettings: {
+                                ...p.timingSettings,
+                                hoursAfterAppointment: Number(d.value),
+                              },
+                            }))
+                          }
+                        />
+                      </Field>
+                    )}
+                  </div>
                 </div>
               </fieldset>
 
               {/* Keyword rules */}
               <fieldset
-                style={{
-                  border: `1px solid ${tokens.colorNeutralStroke2}`,
-                  borderRadius: tokens.borderRadiusMedium,
-                  padding: tokens.spacingVerticalS,
-                }}
+                className={`${classes.section} ${classes.rulesSection}`}
               >
-                <legend style={{ fontWeight: "600" }}>
+                <legend className={classes.sectionTitle}>
                   Appointment matching rules
                 </legend>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: tokens.spacingVerticalS,
-                  }}
-                >
+                <div className={classes.sectionHeader}>
+                  <Text size={200} className={classes.sectionDescription}>
+                    Define which calendar appointments activate this profile.
+                  </Text>
+                </div>
+                <div className={classes.sectionContent}>
                   <Field label="Combine rules with">
                     <Dropdown
+                      inlinePopup
                       value={draft.matchRules.combinator}
                       onOptionSelect={(_e, d) =>
                         setDraft((p) => ({
@@ -670,18 +987,13 @@ export function ProfileList() {
                       <Option value="OR">OR (any must match)</Option>
                     </Dropdown>
                   </Field>
-                  {draft.matchRules.keywordRules.map((rule) => (
-                    <div
-                      key={rule.id}
-                      style={{
-                        display: "flex",
-                        gap: tokens.spacingHorizontalXS,
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Field label="Field" style={{ flex: 1 }}>
+                  <div className={classes.keywordList}>
+                    {draft.matchRules.keywordRules.map((rule) => (
+                      <div key={rule.id} className={classes.keywordRow}>
+                      <Field label="Field" className={classes.keywordField}>
                         <Combobox
-                          value={rule.field}
+                          inlinePopup
+                          value={FIELD_LABELS[rule.field]}
                           onOptionSelect={(_e, d) =>
                             updateKeyword(rule.id, {
                               field: d.optionValue as AppointmentMatchField,
@@ -690,14 +1002,15 @@ export function ProfileList() {
                         >
                           {FIELDS.map((f) => (
                             <Option key={f} value={f}>
-                              {f}
+                              {FIELD_LABELS[f]}
                             </Option>
                           ))}
                         </Combobox>
                       </Field>
-                      <Field label="Operator" style={{ flex: 1 }}>
+                      <Field label="Operator" className={classes.keywordField}>
                         <Combobox
-                          value={rule.operator}
+                          inlinePopup
+                          value={OPERATOR_LABELS[rule.operator]}
                           onOptionSelect={(_e, d) =>
                             updateKeyword(rule.id, {
                               operator:
@@ -707,14 +1020,19 @@ export function ProfileList() {
                         >
                           {OPERATORS.map((o) => (
                             <Option key={o} value={o}>
-                              {o}
+                              {OPERATOR_LABELS[o]}
                             </Option>
                           ))}
                         </Combobox>
                       </Field>
-                      <Field label="Value" style={{ flex: 2 }}>
+                      <Field label="Value" className={classes.keywordValue}>
                         <Input
                           value={rule.value}
+                          placeholder={
+                            rule.operator === "regex"
+                              ? "e.g. /vacation|holiday/i"
+                              : "Enter a value"
+                          }
                           onChange={(_e, d) =>
                             updateKeyword(rule.id, { value: d.value })
                           }
@@ -724,49 +1042,50 @@ export function ProfileList() {
                         icon={<Delete24Regular />}
                         appearance="subtle"
                         size="small"
+                        className={classes.deleteRuleButton}
+                        aria-label="Delete keyword rule"
+                        title="Delete keyword rule"
                         onClick={() => removeKeyword(rule.id)}
                       />
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
                   <Button
                     icon={<Add24Regular />}
                     appearance="outline"
                     size="small"
+                    className={classes.addRuleButton}
                     onClick={addKeyword}
                   >
                     Add keyword rule
                   </Button>
 
                   {/* Duration rule */}
-                  <Switch
-                    checked={draft.matchRules.durationRule.enabled}
-                    onChange={(_e, d) =>
-                      setDraft((p) => ({
-                        ...p,
-                        matchRules: {
-                          ...p.matchRules,
-                          durationRule: {
-                            ...p.matchRules.durationRule,
-                            enabled: d.checked,
+                  <div className={classes.subsection}>
+                    <Switch
+                      checked={draft.matchRules.durationRule.enabled}
+                      onChange={(_e, d) =>
+                        setDraft((p) => ({
+                          ...p,
+                          matchRules: {
+                            ...p.matchRules,
+                            durationRule: {
+                              ...p.matchRules.durationRule,
+                              enabled: d.checked,
+                            },
                           },
-                        },
-                      }))
-                    }
-                    label="Filter by duration"
-                  />
-                  {draft.matchRules.durationRule.enabled && (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: tokens.spacingHorizontalM,
-                      }}
-                    >
-                      <Field label="Min duration (min)">
+                        }))
+                      }
+                      label="Filter by duration"
+                    />
+                    {draft.matchRules.durationRule.enabled && (
+                      <div className={classes.twoColumnGrid}>
+                      <Field label="Minimum hours">
                         <Input
                           type="number"
                           min="0"
                           value={String(
-                            draft.matchRules.durationRule.minMinutes ?? "",
+                            draft.matchRules.durationRule.minHours ?? "",
                           )}
                           onChange={(_e, d) =>
                             setDraft((p) => ({
@@ -775,7 +1094,7 @@ export function ProfileList() {
                                 ...p.matchRules,
                                 durationRule: {
                                   ...p.matchRules.durationRule,
-                                  minMinutes: d.value
+                                  minHours: d.value
                                     ? Number(d.value)
                                     : undefined,
                                 },
@@ -784,12 +1103,12 @@ export function ProfileList() {
                           }
                         />
                       </Field>
-                      <Field label="Max duration (min)">
+                      <Field label="Maximum hours">
                         <Input
                           type="number"
                           min="0"
                           value={String(
-                            draft.matchRules.durationRule.maxMinutes ?? "",
+                            draft.matchRules.durationRule.maxHours ?? "",
                           )}
                           onChange={(_e, d) =>
                             setDraft((p) => ({
@@ -798,7 +1117,7 @@ export function ProfileList() {
                                 ...p.matchRules,
                                 durationRule: {
                                   ...p.matchRules.durationRule,
-                                  maxMinutes: d.value
+                                  maxHours: d.value
                                     ? Number(d.value)
                                     : undefined,
                                 },
@@ -807,38 +1126,34 @@ export function ProfileList() {
                           }
                         />
                       </Field>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Busy status */}
-                  <Switch
-                    checked={draft.matchRules.busyStatusRule.enabled}
-                    onChange={(_e, d) =>
-                      setDraft((p) => ({
-                        ...p,
-                        matchRules: {
-                          ...p.matchRules,
-                          busyStatusRule: {
-                            ...p.matchRules.busyStatusRule,
-                            enabled: d.checked,
+                  <div className={classes.subsection}>
+                    <Switch
+                      checked={draft.matchRules.busyStatusRule.enabled}
+                      onChange={(_e, d) =>
+                        setDraft((p) => ({
+                          ...p,
+                          matchRules: {
+                            ...p.matchRules,
+                            busyStatusRule: {
+                              ...p.matchRules.busyStatusRule,
+                              enabled: d.checked,
+                            },
                           },
-                        },
-                      }))
-                    }
-                    label="Filter by busy status"
-                  />
-                  {draft.matchRules.busyStatusRule.enabled && (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: tokens.spacingHorizontalS,
-                      }}
-                    >
+                        }))
+                      }
+                      label="Filter by busy status"
+                    />
+                    {draft.matchRules.busyStatusRule.enabled && (
+                      <div className={classes.statusGrid}>
                       {BUSY_STATUSES.map((s) => (
                         <Checkbox
                           key={s}
-                          label={s}
+                          label={BUSY_STATUS_LABELS[s]}
                           checked={draft.matchRules.busyStatusRule.statuses.includes(
                             s,
                           )}
@@ -861,6 +1176,36 @@ export function ProfileList() {
                           }}
                         />
                       ))}
+                      </div>
+                    )}
+                  </div>
+                  <Text size={200} className={classes.helperText}>
+                    Matching order is taken from the list order. Drag a profile
+                    by its grip to change the precedence.
+                  </Text>
+                  {recommendation && (
+                    <div
+                      role="status"
+                      className={classes.recommendation}
+                    >
+                      <Text>
+                        {recommendation === "teamsOnly"
+                          ? "No duration filter is set. Consider using only a Teams status for this rule."
+                          : recommendation === "internalOnly"
+                            ? "This rule targets appointments shorter than 8 hours. Consider replying to internal users only."
+                            : "External auto-replies are best reserved for appointments lasting 8 hours or longer."}
+                      </Text>
+                      <Button
+                        appearance="secondary"
+                        size="small"
+                        onClick={applyRecommendation}
+                      >
+                        {recommendation === "teamsOnly"
+                          ? "Use Teams only"
+                          : recommendation === "internalOnly"
+                            ? "Internal only"
+                            : "Set 8-hour minimum"}
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -868,28 +1213,16 @@ export function ProfileList() {
 
               {/* Teams status */}
               <fieldset
-                style={{
-                  border: `1px solid ${tokens.colorNeutralStroke2}`,
-                  borderRadius: tokens.borderRadiusMedium,
-                  padding: tokens.spacingVerticalS,
-                }}
+                className={`${classes.section} ${classes.teamsSection}`}
               >
-                <legend style={{ fontWeight: "600" }}>Teams status</legend>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: tokens.spacingVerticalS,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: tokens.spacingHorizontalS,
-                    }}
-                  >
+                <legend className={classes.sectionTitle}>Teams status</legend>
+                <div className={classes.sectionHeader}>
+                  <Text size={200} className={classes.sectionDescription}>
+                    Keep your Teams presence aligned with this calendar rule.
+                  </Text>
+                </div>
+                <div className={classes.sectionContent}>
+                  <div className={classes.subsectionHeader}>
                     <Switch
                       checked={draft.teamsStatusSettings.enabled}
                       onChange={(_e, d) =>
@@ -916,15 +1249,10 @@ export function ProfileList() {
                       </Button>
                     )}
                     {teamsStatusTestState === "testing" && (
-                      <span
-                        style={{
-                          fontSize: tokens.fontSizeBase200,
-                          color: tokens.colorNeutralForeground3,
-                        }}
-                      >
+                      <Text size={200} className={classes.helperText}>
                         Status set to {draft.teamsStatusSettings.statusWhenActive}
                         {" – reverting in 3 seconds…"}
-                      </span>
+                      </Text>
                     )}
                     {teamsStatusTestState === "error" && (
                       <span
@@ -938,9 +1266,10 @@ export function ProfileList() {
                     )}
                   </div>
                   {draft.teamsStatusSettings.enabled && (
-                    <>
+                    <div className={classes.subsection}>
                       <Field label="Teams status">
                         <Dropdown
+                          inlinePopup
                           value={draft.teamsStatusSettings.statusWhenActive}
                           onOptionSelect={(_e, d) =>
                             setDraft((p) => ({
@@ -998,13 +1327,13 @@ export function ProfileList() {
                         }
                         label="Restore Teams status when auto-reply ends"
                       />
-                    </>
+                    </div>
                   )}
                 </div>
               </fieldset>
             </DialogContent>
 
-            <DialogActions>
+            <DialogActions className={classes.dialogActions}>
               <DialogTrigger disableButtonEnhancement>
                 <Button appearance="secondary">Cancel</Button>
               </DialogTrigger>

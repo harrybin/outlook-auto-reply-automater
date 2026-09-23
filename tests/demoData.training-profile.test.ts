@@ -37,4 +37,35 @@ describe("demo training profile", () => {
     expect(profile).toBeDefined();
     expect(appointmentMatchesProfile(appointment, profile!)).toBe(true);
   });
+
+  it("uses recipient and duration defaults that match the recommendations", () => {
+    const vacation = DEMO_DATA.automationProfiles.find(
+      (candidate) => candidate.id === "demo-profile-1",
+    );
+    const meeting = DEMO_DATA.automationProfiles.find(
+      (candidate) => candidate.id === "demo-profile-2",
+    );
+    const traveling = DEMO_DATA.automationProfiles.find(
+      (candidate) => candidate.id === "demo-profile-5",
+    );
+
+    expect(vacation).toMatchObject({
+      autoReplyAudience: "both",
+      matchRules: {
+        durationRule: { enabled: true, minHours: 8 },
+      },
+    });
+    expect(meeting).toMatchObject({
+      autoReplyAudience: "internal",
+      matchRules: {
+        durationRule: { enabled: true, maxHours: 479 / 60 },
+      },
+    });
+    expect(traveling).toMatchObject({
+      autoReplyAudience: "internal",
+      matchRules: {
+        durationRule: { enabled: true, maxHours: 479 / 60 },
+      },
+    });
+  });
 });

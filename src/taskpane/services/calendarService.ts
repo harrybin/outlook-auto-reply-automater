@@ -171,10 +171,10 @@ export function appointmentMatchesProfile(
 
   // Duration rule
   if (matchRules.durationRule.enabled) {
-    const { minMinutes, maxMinutes } = matchRules.durationRule;
+    const { minHours, maxHours } = matchRules.durationRule;
     const dur = appointment.durationMinutes;
-    const min = minMinutes !== undefined ? dur >= minMinutes : true;
-    const max = maxMinutes !== undefined ? dur <= maxMinutes : true;
+    const min = minHours !== undefined ? dur >= minHours * 60 : true;
+    const max = maxHours !== undefined ? dur <= maxHours * 60 : true;
     results.push(min && max);
   }
 

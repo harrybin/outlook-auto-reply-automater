@@ -101,9 +101,42 @@ describe("useStore settings import/export", () => {
     const state = useStore.getState();
     expect(state.autoReplyMessages).toHaveLength(1);
     expect(state.automationProfiles).toHaveLength(1);
+    expect(state.automationProfiles[0].autoReplyAudience).toBe("both");
     expect(state.locationSettings.rules).toHaveLength(1);
     expect(state.activeAutoReplyId).toBe("msg-1");
     expect(state.hasHandledDefaultRulesPrompt).toBe(true);
+  });
+
+  it("migrates legacy duration minute limits to hours", () => {
+    const legacySettings = {
+      ...BASE_SETTINGS,
+      automationProfiles: [
+        {
+          ...BASE_SETTINGS.automationProfiles[0],
+          matchRules: {
+            ...BASE_SETTINGS.automationProfiles[0].matchRules,
+            durationRule: {
+              enabled: true,
+              minMinutes: 90,
+              maxMinutes: 240,
+            },
+          },
+        },
+      ],
+    };
+
+    const result = useStore.getState().importSettings(
+      JSON.stringify(legacySettings),
+    );
+
+    expect(result.success).toBe(true);
+    expect(useStore.getState().automationProfiles[0].matchRules.durationRule).toEqual(
+      {
+        enabled: true,
+        minHours: 1.5,
+        maxHours: 4,
+      },
+    );
   });
 
   it("rejects invalid JSON", () => {

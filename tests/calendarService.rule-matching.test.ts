@@ -109,7 +109,7 @@ describe("appointmentMatchesProfile training preset", () => {
           caseSensitive: false,
         },
       ],
-      durationRule: { enabled: true, minMinutes: 240 },
+      durationRule: { enabled: true, minHours: 4 },
     };
 
     expect(
@@ -127,6 +127,37 @@ describe("appointmentMatchesProfile training preset", () => {
     expect(
       appointmentMatchesProfile(
         { ...APPOINTMENT, title: "Training", durationMinutes: 239 },
+        profile,
+      ),
+    ).toBe(false);
+  });
+
+  it("applies minimum and maximum hour limits together", () => {
+    const profile = createProfile({
+      id: "rule-duration-range",
+      field: "title",
+      operator: "contains",
+      value: "Vacation",
+      caseSensitive: false,
+    });
+    profile.matchRules = {
+      ...profile.matchRules,
+      durationRule: {
+        enabled: true,
+        minHours: 2,
+        maxHours: 4,
+      },
+    };
+
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, durationMinutes: 120 },
+        profile,
+      ),
+    ).toBe(true);
+    expect(
+      appointmentMatchesProfile(
+        { ...APPOINTMENT, durationMinutes: 241 },
         profile,
       ),
     ).toBe(false);

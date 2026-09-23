@@ -37,12 +37,18 @@ export async function enableAutoReply(
 ): Promise<void> {
   const contentType = message.isHtml ? "html" : "text";
   const content = renderMessageTemplate(message.body, appointment, profile);
+  const audience = profile?.autoReplyAudience ?? "both";
   const payload: AutoReplyPayload = {
     status: "alwaysEnabled",
-    externalAudience: "all",
-    internalReplyMessage: { contentType, content },
-    externalReplyMessage: { contentType, content },
+    externalAudience: audience === "internal" ? "none" : "all",
   };
+
+  if (audience !== "external") {
+    payload.internalReplyMessage = { contentType, content };
+  }
+  if (audience !== "internal") {
+    payload.externalReplyMessage = { contentType, content };
+  }
 
   await graphClient
     .api("/me/mailboxSettings/automaticRepliesSetting")

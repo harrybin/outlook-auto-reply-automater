@@ -5,6 +5,7 @@ import { resolve } from "path";
 import fs from "fs";
 import os from "os";
 import type { ServerOptions } from "https";
+import { configDefaults } from "vitest/config";
 
 // Load dev certificates created by office-addin-dev-certs (if available).
 // Returns the cert config when found so basicSsl plugin is not needed.
@@ -90,6 +91,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
+    exclude: [...configDefaults.exclude, "tests/e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

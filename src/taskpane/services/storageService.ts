@@ -62,6 +62,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
     id: "preset-profile-vacation",
     name: "Vacation Auto-Reply 🌴",
     enabled: false,
+    autoReplyAudience: "both",
     autoReplyMessageId: "preset-message-vacation",
     matchRules: {
       keywordRules: [
@@ -73,7 +74,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
           caseSensitive: false,
         },
       ],
-      durationRule: { enabled: true, minMinutes: 480 },
+      durationRule: { enabled: true, minHours: 8 },
       busyStatusRule: { enabled: true, statuses: ["outOfOffice"] },
       combinator: "AND",
     },
@@ -97,6 +98,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
     id: "preset-profile-meeting",
     name: "Meeting Reply 🗓️",
     enabled: false,
+    autoReplyAudience: "internal",
     autoReplyMessageId: "preset-message-meeting",
     matchRules: {
       keywordRules: [
@@ -108,7 +110,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
           caseSensitive: false,
         },
       ],
-      durationRule: { enabled: false },
+      durationRule: { enabled: true, maxHours: 479 / 60 },
       busyStatusRule: { enabled: true, statuses: ["busy"] },
       combinator: "AND",
     },
@@ -132,6 +134,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
     id: "preset-profile-public-holiday",
     name: "Public Holiday 🎉",
     enabled: false,
+    autoReplyAudience: "both",
     autoReplyMessageId: "preset-message-public-holiday",
     matchRules: {
       keywordRules: [
@@ -143,7 +146,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
           caseSensitive: false,
         },
       ],
-      durationRule: { enabled: true, minMinutes: 480 },
+      durationRule: { enabled: true, minHours: 8 },
       busyStatusRule: { enabled: false, statuses: [] },
       combinator: "AND",
     },
@@ -168,6 +171,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
     name: "Training – Teams only 🎓",
     enabled: false,
     enableAutoReply: false,
+    autoReplyAudience: "internal",
     autoReplyMessageId: "preset-message-training",
     matchRules: {
       keywordRules: [
@@ -203,6 +207,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
     id: "preset-profile-traveling",
     name: "Traveling – journey, drive or flight ✈️",
     enabled: false,
+    autoReplyAudience: "internal",
     autoReplyMessageId: "preset-message-traveling",
     matchRules: {
       keywordRules: [
@@ -215,7 +220,7 @@ const DEFAULT_PROFILES: AutomationProfile[] = [
           caseSensitive: false,
         },
       ],
-      durationRule: { enabled: false },
+      durationRule: { enabled: true, maxHours: 479 / 60 },
       busyStatusRule: { enabled: true, statuses: ["busy"] },
       combinator: "AND",
     },

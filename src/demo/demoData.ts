@@ -66,6 +66,7 @@ export const DEMO_DATA: AppSettings = {
       id: "demo-profile-1",
       name: "Vacation Auto-Reply 🌴",
       enabled: true,
+      autoReplyAudience: "both",
       autoReplyMessageId: "demo-msg-1",
       priority: 10,
       matchRules: {
@@ -86,7 +87,7 @@ export const DEMO_DATA: AppSettings = {
             caseSensitive: false,
           },
         ],
-        durationRule: { enabled: true, minMinutes: 480 },
+        durationRule: { enabled: true, minHours: 8 },
         busyStatusRule: { enabled: true, statuses: ["outOfOffice"] },
       },
       timingSettings: {
@@ -108,6 +109,7 @@ export const DEMO_DATA: AppSettings = {
       id: "demo-profile-2",
       name: "Meeting Reply 🗓️",
       enabled: true,
+      autoReplyAudience: "internal",
       autoReplyMessageId: "demo-msg-2",
       priority: 50,
       matchRules: {
@@ -121,7 +123,7 @@ export const DEMO_DATA: AppSettings = {
             caseSensitive: false,
           },
         ],
-        durationRule: { enabled: false },
+        durationRule: { enabled: true, maxHours: 479 / 60 },
         busyStatusRule: { enabled: true, statuses: ["busy"] },
       },
       timingSettings: {
@@ -143,6 +145,7 @@ export const DEMO_DATA: AppSettings = {
       id: "demo-profile-3",
       name: "Public Holiday 🎉",
       enabled: false,
+      autoReplyAudience: "both",
       autoReplyMessageId: "demo-msg-3",
       priority: 20,
       matchRules: {
@@ -163,7 +166,7 @@ export const DEMO_DATA: AppSettings = {
             caseSensitive: false,
           },
         ],
-        durationRule: { enabled: true, minMinutes: 480 },
+        durationRule: { enabled: true, minHours: 8 },
         busyStatusRule: { enabled: false, statuses: [] },
       },
       timingSettings: {
@@ -186,6 +189,7 @@ export const DEMO_DATA: AppSettings = {
       name: "Training – Teams status only 🎓",
       enabled: true,
       enableAutoReply: false,
+      autoReplyAudience: "internal",
       autoReplyMessageId: "demo-msg-4",
       priority: 40,
       matchRules: {
@@ -221,6 +225,7 @@ export const DEMO_DATA: AppSettings = {
       id: "demo-profile-5",
       name: "Unterwegs – Reise, Fahrt oder Flug 🚆",
       enabled: true,
+      autoReplyAudience: "internal",
       autoReplyMessageId: "demo-msg-5",
       priority: 30,
       matchRules: {
@@ -235,7 +240,7 @@ export const DEMO_DATA: AppSettings = {
             caseSensitive: false,
           },
         ],
-        durationRule: { enabled: false },
+        durationRule: { enabled: true, maxHours: 479 / 60 },
         busyStatusRule: { enabled: true, statuses: ["busy"] },
       },
       timingSettings: {
